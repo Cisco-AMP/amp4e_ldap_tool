@@ -1,0 +1,3 @@
+#!/usr/bin/env ruby
+
+require "amp4e_ldap_tool"
