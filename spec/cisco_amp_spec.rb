@@ -28,6 +28,12 @@ describe Amp4eLdapTool::CiscoAMP do
       @config[:amp][:api][:version] = nil  
       expect{Amp4eLdapTool::CiscoAMP.new}.to raise_error(Amp4eLdapTool::AMPConfigError)
     end
+    
+    it 'throws an error with a bad  URI' do
+      @config[:amp][:host] = "A_bad_hostname!"
+      expect{Amp4eLdapTool::CiscoAMP.new}
+        .to raise_error(Amp4eLdapTool::AMPBadURIError)
+    end
   end
 
   context '#get' do
@@ -65,18 +71,6 @@ describe Amp4eLdapTool::CiscoAMP do
       it 'should return invalid creds response' do
         expect{@amp.get("computers", "hostname")}
           .to raise_error(Amp4eLdapTool::AMPUnauthorizedError)
-      end
-    end
-
-    context 'with bad hostnames' do
-      before(:each) do
-        @config[:amp][:host] = "someBadURL"
-        @amp = Amp4eLdapTool::CiscoAMP.new
-      end
-    
-      it 'throws an error trying to create a URI' do
-        expect{@amp.get("computers", "hostname")}
-          .to raise_error(Amp4eLdapTool::AMPBadURIError)
       end
     end
   end

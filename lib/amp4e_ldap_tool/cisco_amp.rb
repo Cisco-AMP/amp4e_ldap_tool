@@ -20,12 +20,8 @@ module Amp4eLdapTool
     end
     
     def get(endpoint, value)
-      begin
-        url = URI(@base_url + "/#{@version}/#{endpoint}")
-        get = Net::HTTP::Get.new(url)
-      rescue Exception
-        raise AMPBadURIError
-      end
+      url = URI(@base_url + "/#{@version}/#{endpoint}")
+      get = Net::HTTP::Get.new(url)
       get.basic_auth(@third_party, @api_key)
       response = Net::HTTP.start(url.hostname, url.port) do |http|
         http.request(get)
@@ -58,11 +54,17 @@ module Amp4eLdapTool
     end
 
     def confirm_config(config)
-      raise AMPConfigError if config[:amp][:host].nil?
       raise AMPConfigError if config[:amp][:email].nil?
       raise AMPConfigError if config[:amp][:api][:third_party].nil?
       raise AMPConfigError if config[:amp][:api][:key].nil?
       raise AMPConfigError if config[:amp][:api][:version].nil?
+      begin
+        Net::HTTP::Get.new(URI(config[:amp][:host]))
+      rescue TypeError
+        raise AMPBadURIError
+      rescue ArgumentError
+        raise AMPConfigError
+      end
     end
   end
 end
