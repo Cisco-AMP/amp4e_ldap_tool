@@ -28,5 +28,11 @@ module Amp4eLdapTool
         puts "I couldn't understand SOURCE, for now specify amp or ldap"
       end
     end
+    
+    desc "patch PC GUID", "Moves a PC to a specified group, requires the new groups GUID"
+    def patch(computer, new_guid)
+      amp = Amp4eLdapTool::CiscoAMP.new
+      puts amp.patch(computer, new_guid)
+    end
   end
 end

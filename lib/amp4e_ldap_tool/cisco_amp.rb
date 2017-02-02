@@ -29,17 +29,31 @@ module Amp4eLdapTool
       check_response(response, value)
     end
 
+    def patch(computer, new_guid)
+      url = URI(@base_url + "/#{@version}/computers/#{computer}")
+      patch = Net::HTTP::Patch.new(url)
+      patch.basic_auth(@third_party, @api_key)
+      patch.set_form_data(group_guid: new_guid)
+      response = Net::HTTP.start(url.hostname, url.port) do |http|
+        http.request(patch)
+      end
+      check_response(response, new_guid)
+    end
+
+
     private
 
-    def check_response(response, value)
+    def check_response(response, value = nil)
       output = []
       case response.message.strip
       when "OK"
         output = scrape_response(response.body, value)
+      when "Accepted"
+        output = "Computer has been moved to Group: #{value}"
       when "Unauthorized"
         raise AMPUnauthorizedError
       else
-        raise AMPResponseError.new(msg: response.message)
+        raise AMPResponseError.new(msg: response.message + ": " + response.code + ": " + response.body)
       end
       output
     end

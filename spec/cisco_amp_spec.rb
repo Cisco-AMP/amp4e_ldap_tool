@@ -36,14 +36,29 @@ describe Amp4eLdapTool::CiscoAMP do
     end
   end
 
+	context '#patch' do
+		context 'with good creds and valid request' do
+			before(:each) do
+        @body = {data: { hostname: "test_pc"}}.to_json
+        @response = double("response", body: @body, message: "Accepted", code: "202", status: "202 Accepted")
+        allow(Net::HTTP).to receive(:start).and_return(@response)
+      end
+
+      it 'moves a pc from one group to another' do
+        ancestry = {parent: "parent_guid", child: "child_guid"}
+        expect(@amp.patch("test_pc", "new_guid")).to eq("202")
+      end
+		end
+	end
+
   context '#get' do
     context 'with good creds and valid request' do
       before(:each) do
-        @response_body = { data: [ { hostname: "computer1",
+        @body = { data: [ { hostname: "computer1",
                                      name: "a_name"},
                                    { hostname: "computer2",
                                      name: "b_name"}]}.to_json
-        @response = double("response", body: @response_body, message: "OK", code: "200")
+        @response = double("response", body: @body, message: "OK", code: "200")
         allow(Net::HTTP).to receive(:start).and_return(@response)
         @amp = Amp4eLdapTool::CiscoAMP.new
       end
