@@ -25,24 +25,33 @@ module Amp4eLdapTool
       send(get, url)
     end
 
-    def move_computer(computer, new_guid)
-      url = URI(@base_url + "/#{@version}/computers/#{computer}")
+    def update_computer(computer_guid, new_guid)
+      url = URI(@base_url + "/#{@version}/computers/#{computer_guid}")
       patch = Net::HTTP::Patch.new(url)
-      form = { group_guid: new_guid }
-      send(patch, url, form)
+      body = { group_guid: new_guid }
+      send(patch, url, body)
     end
 
-    def assign_parent(parent_guid, moved_group_guid)
-      url = URI(@base_url + "/#{version}/groups/#{parent_guid}/#{moved_group_guid}")
+    def update_group(group_guid, parent = nil)
+      url = URI(@base_url + "/#{@version}/groups/#{group_guid}/parent")
       patch = Net::HTTP::Patch.new(url)
-      send(patch, url)
+      body = { parent_guid: parent }
+      send(patch, url, body)
+    end
+
+    def create_group(group_name, desc = "Imported from LDAP")
+      url = URI(@base_url + "/#{@version}/groups/")
+      post = Net::HTTP::Post.new(url)
+      body = { name: group_name, email: @email,
+               description: desc }
+      send(post, url, body)
     end
 
     private
 
-    def send(http_request, url, post = {})
+    def send(http_request, url, body = {})
       http_request.basic_auth(@third_party, @api_key)
-      http_request.set_form_data(post) unless post.empty?
+      http_request.set_form_data(body) unless body.empty?
       
       response = Net::HTTP.start(url.hostname, url.port) do |http|
         http.request(http_request)
@@ -55,7 +64,7 @@ module Amp4eLdapTool
       case response.message.strip
       when "OK"
         output = scrape_response(response.body)
-      when "Accepted"
+      when "Accepted", "Created"
         output = response.message.strip
       when "Bad Request"
         parse = JSON.parse(response.body)
@@ -63,9 +72,8 @@ module Amp4eLdapTool
       when "Unauthorized"
         raise AMPUnauthorizedError
       else
-        raise AMPResponseError.new(msg: response.message + 
-                                   ": " + response.code + 
-                                   ": " + response.body)
+        raise AMPResponseError.new(msg: response.message + ": " + 
+              response.code + ": " + response.body)
       end
       output
     end

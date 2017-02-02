@@ -34,5 +34,13 @@ module Amp4eLdapTool
       amp = Amp4eLdapTool::CiscoAMP.new
       puts amp.move_computer(computer, new_guid)
     end
+
+    desc "create NAME", "Creates a group with the name of NAME"
+    method_option :desc, aliases: "-d"
+    def create(name)
+      amp = Amp4eLdapTool::CiscoAMP.new
+      puts amp.create_group(name) unless options[:desc]
+      puts amp.create_group(name, options[:desc]) if options[:desc]
+    end
   end
 end

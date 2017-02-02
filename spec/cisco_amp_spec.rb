@@ -14,15 +14,14 @@ describe Amp4eLdapTool::CiscoAMP do
     allow(YAML).to receive(:load_file).and_return(@config)
     @amp = Amp4eLdapTool::CiscoAMP.new
   end
-
+  
   context '#initialize' do
     it 'creates a valid web object for amp' do
-      amp = Amp4eLdapTool::CiscoAMP.new
-      expect(amp.base_url).to eq(@config[:amp][:host])
-      expect(amp.version).to eq(@config[:amp][:api][:version])
-      expect(amp.email).to eq(@config[:amp][:email])
-      expect(amp.third_party).to eq(@config[:amp][:api][:third_party])
-      expect(amp.api_key).to eq(@config[:amp][:api][:key])
+      expect(@amp.base_url).to eq(@config[:amp][:host])
+      expect(@amp.version).to eq(@config[:amp][:api][:version])
+      expect(@amp.email).to eq(@config[:amp][:email])
+      expect(@amp.third_party).to eq(@config[:amp][:api][:third_party])
+      expect(@amp.api_key).to eq(@config[:amp][:api][:key])
     end
 
     it 'throws an error with a bad config' do
@@ -37,7 +36,52 @@ describe Amp4eLdapTool::CiscoAMP do
     end
   end
 
-	context '#move_computer' do
+  context '#update_group' do
+    context 'with valid inputs' do
+      before(:each) do
+        @body = {}.to_json
+        @response = double("response", body: @body,
+                           message: "Accepted", code: "202")
+        allow(Net::HTTP).to receive(:start).and_return(@response)
+      end
+
+      it 'gives a group a parent' do
+        expect(@amp.update_group("group_guid", "new_parent_guid")).to eq("Accepted")
+      end
+
+      it 'orphans a group to root' do
+        expect(@amp.update_group("group_guid", nil)).to eq("Accepted")
+      end
+    end
+  end
+
+  context '#create_group' do
+    context 'with a valid input' do
+      before(:each) do
+        @body = { data: { name: "new_group"}}.to_json
+        @response = double("response", body: @body,
+                           message: "Created", code: "201")
+        allow(Net::HTTP).to receive(:start).and_return(@response)
+      end
+      it 'creates a group' do
+        expect(@amp.create_group("new_group")).to eq("Created")
+      end
+    end
+
+    context 'with a created group' do
+      before(:each) do
+        @body = {}.to_json #server error until further notice
+        @response = double("response", body = @body,
+                           message: "", code: "500")
+        allow(Net::HTTP).to receive(:start).and_return(response) 
+      end
+      xit 'returns server error until a better response can be built' do
+
+      end
+    end
+  end
+
+	context '#update_computer' do
 		context 'with a valid request' do
 			before(:each) do
         @body = {data: { hostname: "test_pc"}}.to_json
@@ -51,7 +95,7 @@ describe Amp4eLdapTool::CiscoAMP do
 
       it 'moves a pc from one group to another' do
         ancestry = {parent: "parent_guid", child: "child_guid"}
-        expect(@amp.move_computer("test_pc", "new_guid")).to eq("Accepted")
+        expect(@amp.update_computer("test_pc", "new_guid")).to eq("Accepted")
       end
 		end
 
@@ -61,12 +105,12 @@ describe Amp4eLdapTool::CiscoAMP do
         @bad_response = double("bad_response",
                                body: @body,
                                message: "Bad Request",
-                               code: "400")
+                               code: :bad_request)
         allow(Net::HTTP).to receive(:start).and_return(@bad_response)
       end
 
       it 'raises a Bad Request error' do
-        expect{@amp.move_computer("pc_guid", "bad_group_guid")}
+        expect{@amp.update_computer("pc_guid", "bad_group_guid")}
           .to raise_error(Amp4eLdapTool::AMPBadRequestError)
       end
     end
@@ -112,7 +156,9 @@ describe Amp4eLdapTool::CiscoAMP do
 
     context 'with a refused connection' do
       before(:each) do
-        allow(Net::HTTP).to receive(:start).and_raise(Errno::ECONNREFUSED)       
+        @config[:amp][:host] = "http://bad.hostname.com"
+        @amp = Amp4eLdapTool::CiscoAMP.new
+        allow(Net::HTTP).to receive(:start).and_raise(Errno::ECONNREFUSED)
       end
 
       it 'should throw a connection refused error' do
