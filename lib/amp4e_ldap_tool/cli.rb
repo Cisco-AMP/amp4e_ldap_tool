@@ -20,8 +20,8 @@ module Amp4eLdapTool
       case source.downcase
       when "amp"
         amp = Amp4eLdapTool::CiscoAMP.new
-        puts amp.get("computers", "hostname") unless options[:computers].nil?
-        puts amp.get("groups", "name") unless options[:groups].nil?
+        puts amp.get("computers") unless options[:computers].nil?
+        puts amp.get("groups") unless options[:groups].nil?
       when "ldap"
       
       else

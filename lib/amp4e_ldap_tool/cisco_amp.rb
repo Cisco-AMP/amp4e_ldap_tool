@@ -19,23 +19,23 @@ module Amp4eLdapTool
       @api_key = config[:amp][:api][:key]
     end
     
-    def get(endpoint, value)
+    def get(endpoint)
       url = URI(@base_url + "/#{@version}/#{endpoint}")
       get = Net::HTTP::Get.new(url)
-      check_response(send(get, url), value)
+      send(get, url)
     end
 
     def move_computer(computer, new_guid)
       url = URI(@base_url + "/#{@version}/computers/#{computer}")
       patch = Net::HTTP::Patch.new(url)
       form = { group_guid: new_guid }
-      check_response(send(patch, url, form), new_guid)
+      send(patch, url, form)
     end
 
     def assign_parent(parent_guid, moved_group_guid)
       url = URI(@base_url + "/#{version}/groups/#{parent_guid}/#{moved_group_guid}")
       patch = Net::HTTP::Patch.new(url)
-      response = send(patch, url)
+      send(patch, url)
     end
 
     private
@@ -43,17 +43,18 @@ module Amp4eLdapTool
     def send(http_request, url, post = {})
       http_request.basic_auth(@third_party, @api_key)
       http_request.set_form_data(post) unless post.empty?
+      
       response = Net::HTTP.start(url.hostname, url.port) do |http|
-        http.request(patch)
+        http.request(http_request)
       end
-      response
+      check_response(response)
     end
 
-    def check_response(response, value = nil)
+    def check_response(response)
       output = []
       case response.message.strip
       when "OK"
-        output = scrape_response(response.body, value)
+        output = scrape_response(response.body)
       when "Accepted"
         output = response.message.strip
       when "Bad Request"
@@ -69,11 +70,13 @@ module Amp4eLdapTool
       output
     end
 
-    def scrape_response(message, value)
+    def scrape_response(message)
       output = []
       parse = JSON.parse(message)
+      type = parse["metadata"]["links"]["self"]
+      name = (type.include?("computers")) ? "hostname" : "name"
       parse["data"].each do |item|
-        output << item[value]
+        output << item[name]
       end
       output
     end

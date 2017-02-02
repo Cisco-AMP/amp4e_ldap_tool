@@ -65,7 +65,7 @@ describe Amp4eLdapTool::CiscoAMP do
         allow(Net::HTTP).to receive(:start).and_return(@bad_response)
       end
 
-      it 'returns Bad Request and writes out the error' do
+      it 'raises a Bad Request error' do
         expect{@amp.move_computer("pc_guid", "bad_group_guid")}
           .to raise_error(Amp4eLdapTool::AMPBadRequestError)
       end
@@ -74,21 +74,23 @@ describe Amp4eLdapTool::CiscoAMP do
 
   context '#get' do
     context 'with good creds and valid request' do
-      before(:each) do
-        @body = { data: [ { hostname: "computer1",
-                                     name: "a_name"},
-                                   { hostname: "computer2",
-                                     name: "b_name"}]}.to_json
-        @response = double("response", body: @body, message: "OK", code: "200")
-        allow(Net::HTTP).to receive(:start).and_return(@response)
-      end
     
       it 'sends an api request for a list of computers' do
-        expect(@amp.get("computers", "hostname")).to match_array(["computer1", "computer2"])
+        @body = {metadata: {links: {self: "computers"}},
+                 data: [ { hostname: "computer1"},
+                         { hostname: "computer2"}]}.to_json
+        @response = double("response", body: @body, message: "OK", code: "200")
+        allow(Net::HTTP).to receive(:start).and_return(@response)
+        expect(@amp.get("computers")).to match_array(["computer1", "computer2"])
       end
 
       it 'sends an api request for a list of groups' do
-        expect(@amp.get("groups","name")).to match_array(["a_name", "b_name"])
+        @body = {metadata: {links: {self: "groups"}},
+                 data: [ { name: "a_name"},
+                         { name: "b_name"}]}.to_json
+        @response = double("response", body: @body, message: "OK", code: "200")
+        allow(Net::HTTP).to receive(:start).and_return(@response)
+        expect(@amp.get("groups")).to match_array(["a_name", "b_name"])
       end
     end
 
@@ -103,7 +105,7 @@ describe Amp4eLdapTool::CiscoAMP do
       end
 
       it 'should return invalid creds response' do
-        expect{@amp.get("computers", "hostname")}
+        expect{@amp.get("computers")}
           .to raise_error(Amp4eLdapTool::AMPUnauthorizedError)
       end
     end
@@ -114,7 +116,7 @@ describe Amp4eLdapTool::CiscoAMP do
       end
 
       it 'should throw a connection refused error' do
-        expect{@amp.get("computers", "hostname")}
+        expect{@amp.get("computers")}
           .to raise_error(Errno::ECONNREFUSED)
       end
     end
