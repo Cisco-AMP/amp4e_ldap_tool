@@ -8,7 +8,8 @@
     :filter: "computer"
     :attributes: "cn"
 :amp:
-  :host: "http://localhost:3000"
+  :host: "http://example.com"
+  #:host: "http://localhost:3000"
   :email: "chwoznia@cisco.com"
   :api:
     :third_party: "338ee569217d94555fc2"

@@ -73,5 +73,17 @@ describe Amp4eLdapTool::CiscoAMP do
           .to raise_error(Amp4eLdapTool::AMPUnauthorizedError)
       end
     end
+
+    context 'with a refused connection' do
+      before(:each) do
+        @amp = Amp4eLdapTool::CiscoAMP.new
+        allow(Net::HTTP).to receive(:start).and_raise(Errno::ECONNREFUSED)       
+      end
+
+      it 'should throw a connection refused error' do
+        expect{@amp.get("computers", "hostname")}
+          .to raise_error(Errno::ECONNREFUSED)
+      end
+    end
   end
 end
