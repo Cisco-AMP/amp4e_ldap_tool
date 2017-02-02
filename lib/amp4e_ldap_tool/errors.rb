@@ -10,4 +10,10 @@ module Amp4eLdapTool
       super
     end
   end
+
+  class AMPResponseError < StandardError
+    def initialize(msg: "The AMP Server returned a non-OK response")
+      super
+    end
+  end
 end

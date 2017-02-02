@@ -19,18 +19,31 @@ module Amp4eLdapTool
       @api_key = config[:amp][:api][:key]
     end
     
-    def get(endpoint)
+    def get(endpoint, value)
       url = URI(@base_url + "/#{@version}/#{endpoint}")
       get = Net::HTTP::Get.new(url)
       get.basic_auth(@third_party, @api_key)
       response = Net::HTTP.start(url.hostname, url.port) do |http|
         http.request(get)
       end
-      scrape_response(response.body, "hostname")
+      check_response(response, value)
     end
 
     private
-    
+
+    def check_response(response, value)
+      output = []
+      case response.message
+      when "OK"
+        output = scrape_response(response.body, value)
+      when "Unauthorized"
+        raise AMPResponseError.new(msg: "Third_party/API credentials appear to be invalid")
+      else
+        raise AMPResponseError
+      end
+      output
+    end
+
     def scrape_response(message, value)
       output = []
       parse = JSON.parse(message)

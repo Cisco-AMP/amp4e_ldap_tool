@@ -1,21 +1,16 @@
 require 'spec_helper'
 require 'amp4e_ldap_tool/cisco_amp'
+require 'amp4e_ldap_tool/errors'
 require 'yaml'
 require 'json'
 
 describe Amp4eLdapTool::CiscoAMP do
   before(:each) do
-    @config = {
-      amp: {
-        host: "https://localhost:3000",
-        email: "test@email.com",
-        api: {
-          third_party: "123456789",
-          key: "some-weird-key",
-          version: "v1" 
-        }
-      }
-    }
+    @config = {amp: { host: "https://localhost:3000",
+                      email: "test@email.com",
+                      api: { third_party: "123456789",
+                             key: "some-weird-key",
+                             version: "v1" }}}
     allow(YAML).to receive(:load_file).and_return(@config)
   end
 
@@ -37,20 +32,41 @@ describe Amp4eLdapTool::CiscoAMP do
 
   context '#get' do
     before(:each) do
-      @http_response = double("http_response")
-      @valid_response = {
-        "data" => [ { "con_guid" => 1234,
-                      "hostname" => "computer1"},
-                    { "con_guid" => 2345,
-                      "hostname" => "computer2"}]}
+      @amp = Amp4eLdapTool::CiscoAMP.new
     end
-  
-    it 'sends an api request for a list of computers' do
-      allow(Net::HTTP).to receive(:start).and_return(@http_response)
-      allow(@http_response).to receive(:body).and_return(@valid_response.to_json)
-      allow(JSON).to receive(:parse).and_return(@valid_response)
-      amp = Amp4eLdapTool::CiscoAMP.new
-      expect(amp.get("computers")).to match_array(["computer1", "computer2"])
+
+    context 'with good creds and valid request' do
+      before(:each) do
+        @response_body = { data: [ { hostname: "computer1",
+                                     name: "a_name"},
+                                   { hostname: "computer2",
+                                     name: "b_name"}]}.to_json
+        @response = double("response", body: @response_body, message: "OK", code: "200")
+        allow(Net::HTTP).to receive(:start).and_return(@response)
+      end
+    
+      it 'sends an api request for a list of computers' do
+        expect(@amp.get("computers", "hostname")).to match_array(["computer1", "computer2"])
+      end
+
+      it 'sends an api request for a list of groups' do
+        expect(@amp.get("groups","name")).to match_array(["a_name", "b_name"])
+      end
+    end
+
+    context 'with bad creds' do
+      before(:each) do
+        @response_body = {errors: [{ error_code: 401,
+                          description: "Unauthorized",
+                          details: ["Unknown API key or Client ID"]}]}.to_json
+        @response = double("response", body: @response_body, 
+                            message: "Unauthorized", code: "401")
+        allow(Net::HTTP).to receive(:start).and_return(@response)
+      end
+
+      it 'should return invalid creds response' do
+        expect{@amp.get("computers", "hostname")}.to raise_error(Amp4eLdapTool::AMPResponseError)
+      end
     end
   end
 end
