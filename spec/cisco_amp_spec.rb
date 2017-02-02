@@ -12,6 +12,7 @@ describe Amp4eLdapTool::CiscoAMP do
                              key: "some-weird-key",
                              version: "v1" }}}
     allow(YAML).to receive(:load_file).and_return(@config)
+    @amp = Amp4eLdapTool::CiscoAMP.new
   end
 
   context '#initialize' do
@@ -36,19 +37,39 @@ describe Amp4eLdapTool::CiscoAMP do
     end
   end
 
-	context '#patch' do
-		context 'with good creds and valid request' do
+	context '#move_computer' do
+		context 'with a valid request' do
 			before(:each) do
         @body = {data: { hostname: "test_pc"}}.to_json
-        @response = double("response", body: @body, message: "Accepted", code: "202", status: "202 Accepted")
+        @response = double("response", 
+                            body: @body, 
+                            message: "Accepted", 
+                            code: "202", 
+                            status: "202 Accepted")
         allow(Net::HTTP).to receive(:start).and_return(@response)
       end
 
       it 'moves a pc from one group to another' do
         ancestry = {parent: "parent_guid", child: "child_guid"}
-        expect(@amp.patch("test_pc", "new_guid")).to eq("202")
+        expect(@amp.move_computer("test_pc", "new_guid")).to eq("Accepted")
       end
 		end
+
+    context 'with bad inputs' do
+      before(:each) do
+        @body = { errors: "error!" }.to_json
+        @bad_response = double("bad_response",
+                               body: @body,
+                               message: "Bad Request",
+                               code: "400")
+        allow(Net::HTTP).to receive(:start).and_return(@bad_response)
+      end
+
+      it 'returns Bad Request and writes out the error' do
+        expect{@amp.move_computer("pc_guid", "bad_group_guid")}
+          .to raise_error(Amp4eLdapTool::AMPBadRequestError)
+      end
+    end
 	end
 
   context '#get' do
@@ -60,7 +81,6 @@ describe Amp4eLdapTool::CiscoAMP do
                                      name: "b_name"}]}.to_json
         @response = double("response", body: @body, message: "OK", code: "200")
         allow(Net::HTTP).to receive(:start).and_return(@response)
-        @amp = Amp4eLdapTool::CiscoAMP.new
       end
     
       it 'sends an api request for a list of computers' do
@@ -80,7 +100,6 @@ describe Amp4eLdapTool::CiscoAMP do
         @response = double("response", body: @response_body, 
                             message: "Unauthorized", code: "401")
         allow(Net::HTTP).to receive(:start).and_return(@response)
-        @amp = Amp4eLdapTool::CiscoAMP.new
       end
 
       it 'should return invalid creds response' do
@@ -91,7 +110,6 @@ describe Amp4eLdapTool::CiscoAMP do
 
     context 'with a refused connection' do
       before(:each) do
-        @amp = Amp4eLdapTool::CiscoAMP.new
         allow(Net::HTTP).to receive(:start).and_raise(Errno::ECONNREFUSED)       
       end
 

@@ -22,26 +22,32 @@ module Amp4eLdapTool
     def get(endpoint, value)
       url = URI(@base_url + "/#{@version}/#{endpoint}")
       get = Net::HTTP::Get.new(url)
-      get.basic_auth(@third_party, @api_key)
-      response = Net::HTTP.start(url.hostname, url.port) do |http|
-        http.request(get)
-      end
-      check_response(response, value)
+      check_response(send(get, url), value)
     end
 
-    def patch(computer, new_guid)
+    def move_computer(computer, new_guid)
       url = URI(@base_url + "/#{@version}/computers/#{computer}")
       patch = Net::HTTP::Patch.new(url)
-      patch.basic_auth(@third_party, @api_key)
-      patch.set_form_data(group_guid: new_guid)
+      form = { group_guid: new_guid }
+      check_response(send(patch, url, form), new_guid)
+    end
+
+    def assign_parent(parent_guid, moved_group_guid)
+      url = URI(@base_url + "/#{version}/groups/#{parent_guid}/#{moved_group_guid}")
+      patch = Net::HTTP::Patch.new(url)
+      response = send(patch, url)
+    end
+
+    private
+
+    def send(http_request, url, post = {})
+      http_request.basic_auth(@third_party, @api_key)
+      http_request.set_form_data(post) unless post.empty?
       response = Net::HTTP.start(url.hostname, url.port) do |http|
         http.request(patch)
       end
-      check_response(response, new_guid)
+      response
     end
-
-
-    private
 
     def check_response(response, value = nil)
       output = []
@@ -49,11 +55,16 @@ module Amp4eLdapTool
       when "OK"
         output = scrape_response(response.body, value)
       when "Accepted"
-        output = "Computer has been moved to Group: #{value}"
+        output = response.message.strip
+      when "Bad Request"
+        parse = JSON.parse(response.body)
+        raise AMPBadRequestError.new(msg: parse["errors"])
       when "Unauthorized"
         raise AMPUnauthorizedError
       else
-        raise AMPResponseError.new(msg: response.message + ": " + response.code + ": " + response.body)
+        raise AMPResponseError.new(msg: response.message + 
+                                   ": " + response.code + 
+                                   ": " + response.body)
       end
       output
     end

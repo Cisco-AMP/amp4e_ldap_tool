@@ -29,10 +29,10 @@ module Amp4eLdapTool
       end
     end
     
-    desc "patch PC GUID", "Moves a PC to a specified group, requires the new groups GUID"
-    def patch(computer, new_guid)
+    desc "move PC GUID", "Moves a PC to a specified group, requires the new groups GUID"
+    def move(computer, new_guid)
       amp = Amp4eLdapTool::CiscoAMP.new
-      puts amp.patch(computer, new_guid)
+      puts amp.move_computer(computer, new_guid)
     end
   end
 end
