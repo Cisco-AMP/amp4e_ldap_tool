@@ -41,7 +41,7 @@ describe Amp4eLdapTool::CiscoAMP do
       before(:each) do
         @body = {}.to_json
         @response = double("response", body: @body,
-                           message: "Accepted", code: :accepted)
+                           message: "Accepted", code: :created)
         allow(Net::HTTP).to receive(:start).and_return(@response)
       end
 
