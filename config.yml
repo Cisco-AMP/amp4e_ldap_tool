@@ -11,7 +11,6 @@
   :host: "http://localhost:3000"
   :email: "chwoznia@cisco.com"
   :api:
-    #:third_party: "338ee569217d94555fc2"
-    :third_party: "badthirdparty"
+    :third_party: "338ee569217d94555fc2"
     :key: "583cf634-5893-42d3-8005-c91a2039c2f9"
     :version: "v1"

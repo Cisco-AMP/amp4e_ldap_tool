@@ -16,4 +16,16 @@ module Amp4eLdapTool
       super
     end
   end
+
+  class AMPBadURIError < StandardError
+    def initialize(msg: "The amp:host in your config file contains an invalid hostname")
+      super
+    end
+  end
+  
+  class AMPUnauthorizedError < AMPResponseError
+    def initialize(msg: "Third_party/API credentials appear to be invalid")
+      super
+    end
+  end
 end

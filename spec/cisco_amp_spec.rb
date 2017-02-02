@@ -31,10 +31,6 @@ describe Amp4eLdapTool::CiscoAMP do
   end
 
   context '#get' do
-    before(:each) do
-      @amp = Amp4eLdapTool::CiscoAMP.new
-    end
-
     context 'with good creds and valid request' do
       before(:each) do
         @response_body = { data: [ { hostname: "computer1",
@@ -43,6 +39,7 @@ describe Amp4eLdapTool::CiscoAMP do
                                      name: "b_name"}]}.to_json
         @response = double("response", body: @response_body, message: "OK", code: "200")
         allow(Net::HTTP).to receive(:start).and_return(@response)
+        @amp = Amp4eLdapTool::CiscoAMP.new
       end
     
       it 'sends an api request for a list of computers' do
@@ -62,10 +59,24 @@ describe Amp4eLdapTool::CiscoAMP do
         @response = double("response", body: @response_body, 
                             message: "Unauthorized", code: "401")
         allow(Net::HTTP).to receive(:start).and_return(@response)
+        @amp = Amp4eLdapTool::CiscoAMP.new
       end
 
       it 'should return invalid creds response' do
-        expect{@amp.get("computers", "hostname")}.to raise_error(Amp4eLdapTool::AMPResponseError)
+        expect{@amp.get("computers", "hostname")}
+          .to raise_error(Amp4eLdapTool::AMPUnauthorizedError)
+      end
+    end
+
+    context 'with bad hostnames' do
+      before(:each) do
+        @config[:amp][:host] = "someBadURL"
+        @amp = Amp4eLdapTool::CiscoAMP.new
+      end
+    
+      it 'throws an error trying to create a URI' do
+        expect{@amp.get("computers", "hostname")}
+          .to raise_error(Amp4eLdapTool::AMPBadURIError)
       end
     end
   end
