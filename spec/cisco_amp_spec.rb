@@ -41,7 +41,7 @@ describe Amp4eLdapTool::CiscoAMP do
       before(:each) do
         @body = {}.to_json
         @response = double("response", body: @body,
-                           message: "Accepted", code: "202")
+                           message: "Accepted", code: :accepted)
         allow(Net::HTTP).to receive(:start).and_return(@response)
       end
 
@@ -60,7 +60,7 @@ describe Amp4eLdapTool::CiscoAMP do
       before(:each) do
         @body = { data: { name: "new_group"}}.to_json
         @response = double("response", body: @body,
-                           message: "Created", code: "201")
+                           message: "Created", code: :created)
         allow(Net::HTTP).to receive(:start).and_return(@response)
       end
       it 'creates a group' do
@@ -88,7 +88,7 @@ describe Amp4eLdapTool::CiscoAMP do
         @response = double("response", 
                             body: @body, 
                             message: "Accepted", 
-                            code: "202", 
+                            code: :accepted, 
                             status: "202 Accepted")
         allow(Net::HTTP).to receive(:start).and_return(@response)
       end
@@ -123,7 +123,7 @@ describe Amp4eLdapTool::CiscoAMP do
         @body = {metadata: {links: {self: "computers"}},
                  data: [ { hostname: "computer1"},
                          { hostname: "computer2"}]}.to_json
-        @response = double("response", body: @body, message: "OK", code: "200")
+        @response = double("response", body: @body, message: "OK", code: :ok)
         allow(Net::HTTP).to receive(:start).and_return(@response)
         expect(@amp.get("computers")).to match_array(["computer1", "computer2"])
       end
@@ -132,7 +132,7 @@ describe Amp4eLdapTool::CiscoAMP do
         @body = {metadata: {links: {self: "groups"}},
                  data: [ { name: "a_name"},
                          { name: "b_name"}]}.to_json
-        @response = double("response", body: @body, message: "OK", code: "200")
+        @response = double("response", body: @body, message: "OK", code: :ok)
         allow(Net::HTTP).to receive(:start).and_return(@response)
         expect(@amp.get("groups")).to match_array(["a_name", "b_name"])
       end
@@ -144,7 +144,7 @@ describe Amp4eLdapTool::CiscoAMP do
                           description: "Unauthorized",
                           details: ["Unknown API key or Client ID"]}]}.to_json
         @response = double("response", body: @response_body, 
-                            message: "Unauthorized", code: "401")
+                            message: "Unauthorized", code: :unauthorized)
         allow(Net::HTTP).to receive(:start).and_return(@response)
       end
 
