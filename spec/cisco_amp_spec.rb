@@ -1,6 +1,7 @@
 require 'spec_helper'
 require 'amp4e_ldap_tool/cisco_amp'
 require 'yaml'
+require 'json'
 
 describe Amp4eLdapTool::CiscoAMP do
   before(:each) do
@@ -35,10 +36,21 @@ describe Amp4eLdapTool::CiscoAMP do
   end
 
   context '#get' do
+    before(:each) do
+      @http_response = double("http_response")
+      @valid_response = {
+        "data" => [ { "con_guid" => 1234,
+                      "hostname" => "computer1"},
+                    { "con_guid" => 2345,
+                      "hostname" => "computer2"}]}
+    end
+  
     it 'sends an api request for a list of computers' do
-      allow(Amp4eLdapTool::CiscoAMP).to receive(:get)
-        .with("computers").and_return("blah")
+      allow(Net::HTTP).to receive(:start).and_return(@http_response)
+      allow(@http_response).to receive(:body).and_return(@valid_response.to_json)
+      allow(JSON).to receive(:parse).and_return(@valid_response)
       amp = Amp4eLdapTool::CiscoAMP.new
+      expect(amp.get("computers")).to match_array(["computer1", "computer2"])
     end
   end
 end

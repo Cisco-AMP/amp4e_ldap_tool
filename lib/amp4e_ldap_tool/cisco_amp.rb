@@ -1,6 +1,7 @@
 require 'net/http'
 require 'yaml'
-require 'errors'
+require 'amp4e_ldap_tool/errors'
+require 'json'
 
 module Amp4eLdapTool
   class CiscoAMP
@@ -25,18 +26,19 @@ module Amp4eLdapTool
       response = Net::HTTP.start(url.hostname, url.port) do |http|
         http.request(get)
       end
-      puts response
-    end
-
-    def move_group
-
-    end
-
-    def move_computer
-
+      scrape_response(response.body, "hostname")
     end
 
     private
+    
+    def scrape_response(message, value)
+      output = []
+      parse = JSON.parse(message)
+      parse["data"].each do |item|
+        output << item[value]
+      end
+      output
+    end
 
     def confirm_config(config)
       raise AMPConfigError if config[:amp][:host].nil?

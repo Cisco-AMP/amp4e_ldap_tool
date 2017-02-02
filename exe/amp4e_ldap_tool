@@ -1,3 +1,5 @@
 #!/usr/bin/env ruby
 
-require "amp4e_ldap_tool"
+require "amp4e_ldap_tool/cli"
+
+Amp4eLdapTool::CLI.start
