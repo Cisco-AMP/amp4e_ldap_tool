@@ -18,7 +18,7 @@ describe Amp4eLdapTool::CiscoAMP do
   end
   
   context '#initialize' do
-    let(:bad) { "a_bad_hostname" }
+    let(:bad_hostname) { "a_bad_hostname" }
 
     it 'creates a valid web object for amp' do
       expect(amp.base_url).to eq(config[:amp][:host])
@@ -32,7 +32,7 @@ describe Amp4eLdapTool::CiscoAMP do
       expect{Amp4eLdapTool::CiscoAMP.new}.to raise_error(Amp4eLdapTool::AMPConfigError)
     end
     it 'throws an error with a bad  URI' do
-      config[:amp][:host] = bad
+      config[:amp][:host] = bad_hostname
       expect{Amp4eLdapTool::CiscoAMP.new}.to raise_error(Amp4eLdapTool::AMPBadURIError)
     end
   end
