@@ -20,13 +20,27 @@ module Amp4eLdapTool
       case source.downcase
       when "amp"
         amp = Amp4eLdapTool::CiscoAMP.new
-        puts amp.get("computers", "hostname") unless options[:computers].nil?
-        puts amp.get("groups", "name") unless options[:groups].nil?
+        puts amp.get("computers") unless options[:computers].nil?
+        puts amp.get("groups") unless options[:groups].nil?
       when "ldap"
       
       else
         puts "I couldn't understand SOURCE, for now specify amp or ldap"
       end
+    end
+    
+    desc "move PC GUID", "Moves a PC to a specified group, requires the new groups GUID"
+    def move(computer, new_guid)
+      amp = Amp4eLdapTool::CiscoAMP.new
+      puts amp.move_computer(computer, new_guid)
+    end
+
+    desc "create NAME", "Creates a group with the name of NAME"
+    method_option :desc, aliases: "-d"
+    def create(name)
+      amp = Amp4eLdapTool::CiscoAMP.new
+      puts amp.create_group(name) unless options[:desc]
+      puts amp.create_group(name, options[:desc]) if options[:desc]
     end
   end
 end

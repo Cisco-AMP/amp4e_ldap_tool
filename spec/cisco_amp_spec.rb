@@ -5,83 +5,161 @@ require 'yaml'
 require 'json'
 
 describe Amp4eLdapTool::CiscoAMP do
+  let(:amp)     { Amp4eLdapTool::CiscoAMP.new}
+  let(:email)   { "test@email.com" }
+  let(:host)    { "https://localhost:3000" }
+  let(:key)     { "akey" }
+  let(:version) { "v1" }
+  let(:third)   { "123456789" }
+  let(:config)  { {amp: {host: host, email: email,
+                   api: {third_party: third, key: key, version: version}}}}
   before(:each) do
-    @config = {amp: { host: "https://localhost:3000",
-                      email: "test@email.com",
-                      api: { third_party: "123456789",
-                             key: "some-weird-key",
-                             version: "v1" }}}
-    allow(YAML).to receive(:load_file).and_return(@config)
+    allow(YAML).to receive(:load_file).and_return(config)
   end
-
+  
   context '#initialize' do
-    it 'creates a valid web object for amp' do
-      amp = Amp4eLdapTool::CiscoAMP.new
-      expect(amp.base_url).to eq(@config[:amp][:host])
-      expect(amp.version).to eq(@config[:amp][:api][:version])
-      expect(amp.email).to eq(@config[:amp][:email])
-      expect(amp.third_party).to eq(@config[:amp][:api][:third_party])
-      expect(amp.api_key).to eq(@config[:amp][:api][:key])
-    end
+    let(:bad) { "a_bad_hostname" }
 
+    it 'creates a valid web object for amp' do
+      expect(amp.base_url).to eq(config[:amp][:host])
+      expect(amp.version).to eq(config[:amp][:api][:version])
+      expect(amp.email).to eq(config[:amp][:email])
+      expect(amp.third_party).to eq(config[:amp][:api][:third_party])
+      expect(amp.api_key).to eq(config[:amp][:api][:key])
+    end
     it 'throws an error with a bad config' do
-      @config[:amp][:api][:version] = nil  
+      config[:amp][:api][:version] = nil  
       expect{Amp4eLdapTool::CiscoAMP.new}.to raise_error(Amp4eLdapTool::AMPConfigError)
     end
-    
     it 'throws an error with a bad  URI' do
-      @config[:amp][:host] = "A_bad_hostname!"
-      expect{Amp4eLdapTool::CiscoAMP.new}
-        .to raise_error(Amp4eLdapTool::AMPBadURIError)
+      config[:amp][:host] = bad
+      expect{Amp4eLdapTool::CiscoAMP.new}.to raise_error(Amp4eLdapTool::AMPBadURIError)
     end
   end
 
-  context '#get' do
-    context 'with good creds and valid request' do
+  context '#update_group' do
+    context 'with valid inputs' do
+      let(:body)        { {}.to_json }
+      let(:group_guid)  { "some_group_guid" }
+      let(:parent_guid) { "some_parent_guid" }
+      let(:uri)         { URI("#{host}/#{version}/groups/#{group_guid}/parent") }
+      let(:response)    { double("resp", body: body, code: :accepted) }
+      
       before(:each) do
-        @response_body = { data: [ { hostname: "computer1",
-                                     name: "a_name"},
-                                   { hostname: "computer2",
-                                     name: "b_name"}]}.to_json
-        @response = double("response", body: @response_body, message: "OK", code: "200")
-        allow(Net::HTTP).to receive(:start).and_return(@response)
-        @amp = Amp4eLdapTool::CiscoAMP.new
+        allow(Net::HTTP).to receive(:start).and_return(response)
+        expect(Net::HTTP::Patch).to receive(:new)
+          .with(uri).and_return(Net::HTTP::Patch.new(uri))
+      end 
+      it 'gives a group a parent' do
+        expect(amp.update_group(group_guid, parent_guid)).to eq(:accepted)
       end
-    
-      it 'sends an api request for a list of computers' do
-        expect(@amp.get("computers", "hostname")).to match_array(["computer1", "computer2"])
+      it 'orphans a group to root' do
+        expect(amp.update_group(group_guid, nil)).to eq(:accepted)
       end
+    end
+  end
 
-      it 'sends an api request for a list of groups' do
-        expect(@amp.get("groups","name")).to match_array(["a_name", "b_name"])
+  context '#create_group' do
+    let(:uri)       { URI("#{host}/#{version}/groups/") }
+    let(:response)  { double("resp", body: body, code: :created) }
+    
+    before(:each) do
+      expect(Net::HTTP::Post).to receive(:new)
+        .with(uri).and_return(Net::HTTP::Post.new(uri))
+    end
+    context 'with a valid input' do
+      let(:group)     { "group_name"}
+      let(:body)      { {data: {name: group}}.to_json }
+      
+      it 'creates a group' do
+        allow(Net::HTTP).to receive(:start).and_return(response)
+        expect(amp.create_group(group)).to eq(:created)
+      end
+    end
+    context 'with a created group' do
+      let(:body)      { {}.to_json }
+      let(:response)  { double("resp", body: body, code: :internal_server_error)}
+
+      xit 'returns server error until a better response can be built' do
+        allow(Net::HTTP).to receive(:start).and_return(response) 
+      end
+    end
+  end
+
+	context '#update_computer' do
+    let(:computer)  { "computer_guid"}
+		
+    context 'with a valid request' do
+      let(:new_group) { "some_group_guid" }
+      let(:body)      { {data: {hostname: computer}}.to_json }
+      let(:response)  { double("resp", body: body, code: :accepted) }
+
+      it 'moves a pc from one group to another' do
+        allow(Net::HTTP).to receive(:start).and_return(response)
+        expect(amp.update_computer(computer, new_group)).to eq(:accepted)
+      end
+		end
+    context 'with bad inputs' do
+      let(:body) { {errors: "error!"}.to_json }
+      let(:bad_group) { "bad_group_guid" }
+      let(:response) { double("bad_response", body: body, code: :bad_request) }
+
+      it 'raises a Bad Request error' do
+        allow(Net::HTTP).to receive(:start).and_return(response)
+        expect{amp.update_computer(computer, bad_group)}
+          .to raise_error(Amp4eLdapTool::AMPBadRequestError)
+      end
+    end
+	end
+
+  context '#get' do
+    let(:computers) { "computers" }
+    let(:groups)  { "groups" }
+    
+    context 'with good creds and valid request' do
+      context 'computers' do
+        let(:pc1)   { "computer1" }
+        let(:pc2)   { "computer2" }
+        let(:body)  { {metadata: {links: {self: computers}},
+                       data: [{hostname: pc1}, {hostname: pc2}]}.to_json}
+        it 'sends an api request for a list of computers' do
+          response = double("response", body: body, code: :ok)
+          allow(Net::HTTP).to receive(:start).and_return(response)
+          expect(amp.get(computers)).to match_array([pc1, pc2])
+        end
+      end
+      context 'groups' do
+        let(:group1)  { "group_1" }
+        let(:group2)  { "group_2" }
+        let(:body){   {metadata: {links: {self: groups}},
+                           data: [{name: group1}, {name: group2}]}.to_json}
+        it 'sends an api request for a list of groups' do
+          response = double("response", body: body, code: :ok)
+          allow(Net::HTTP).to receive(:start).and_return(response)
+          expect(amp.get(groups)).to match_array([group1, group2])
+        end
       end
     end
 
     context 'with bad creds' do
-      before(:each) do
-        @response_body = {errors: [{ error_code: 401,
-                          description: "Unauthorized",
-                          details: ["Unknown API key or Client ID"]}]}.to_json
-        @response = double("response", body: @response_body, 
-                            message: "Unauthorized", code: "401")
-        allow(Net::HTTP).to receive(:start).and_return(@response)
-        @amp = Amp4eLdapTool::CiscoAMP.new
-      end
+      let(:body)     {{errors: [{ error_code: 401, description: "Unauthorized",
+                       details: ["Unknown API key or Client ID"]}]}.to_json}
+      let(:response) { double("response", body: body, code: :unauthorized) }
 
       it 'should return invalid creds response' do
-        expect{@amp.get("computers", "hostname")}
+        allow(Net::HTTP).to receive(:start).and_return(response)
+        expect{amp.get(computers)}
           .to raise_error(Amp4eLdapTool::AMPUnauthorizedError)
       end
     end
 
     context 'with a refused connection' do
-      before(:each) do
-        @amp = Amp4eLdapTool::CiscoAMP.new
-        allow(Net::HTTP).to receive(:start).and_raise(Errno::ECONNREFUSED)       
-      end
-
+      let(:bad_host) { "http://bad.hostname.com" }
+      
       it 'should throw a connection refused error' do
-        expect{@amp.get("computers", "hostname")}
+        config[:amp][:host] = bad_host
+        allow(Net::HTTP).to receive(:start).and_raise(Errno::ECONNREFUSED)
+        expect{amp.get(computers)}
           .to raise_error(Errno::ECONNREFUSED)
       end
     end

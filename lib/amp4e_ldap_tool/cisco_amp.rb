@@ -19,36 +19,71 @@ module Amp4eLdapTool
       @api_key = config[:amp][:api][:key]
     end
     
-    def get(endpoint, value)
+    def get(endpoint)
       url = URI(@base_url + "/#{@version}/#{endpoint}")
       get = Net::HTTP::Get.new(url)
-      get.basic_auth(@third_party, @api_key)
-      response = Net::HTTP.start(url.hostname, url.port) do |http|
-        http.request(get)
-      end
-      check_response(response, value)
+      send(get, url)
+    end
+
+    def update_computer(computer_guid, new_guid)
+      url = URI(@base_url + "/#{@version}/computers/#{computer_guid}")
+      patch = Net::HTTP::Patch.new(url)
+      body = { group_guid: new_guid }
+      send(patch, url, body)
+    end
+
+    def update_group(group_guid, parent = nil)
+      url = URI(@base_url + "/#{@version}/groups/#{group_guid}/parent")
+      patch = Net::HTTP::Patch.new(url)
+      body = { parent_guid: parent }
+      send(patch, url, body)
+    end
+
+    def create_group(group_name, desc = "Imported from LDAP")
+      url = URI(@base_url + "/#{@version}/groups/")
+      post = Net::HTTP::Post.new(url)
+      body = { name: group_name, email: @email,
+               description: desc }
+      send(post, url, body)
     end
 
     private
 
-    def check_response(response, value)
+    def send(http_request, url, body = {})
+      http_request.basic_auth(@third_party, @api_key)
+      http_request.set_form_data(body) unless body.empty?
+      
+      response = Net::HTTP.start(url.hostname, url.port) do |http|
+        http.request(http_request)
+      end
+      check_response(response)
+    end
+
+    def check_response(response)
       output = []
-      case response.message.strip
-      when "OK"
-        output = scrape_response(response.body, value)
-      when "Unauthorized"
+      case response.code
+      when :ok
+        output = scrape_response(response.body)
+      when :accepted, :created
+        output = response.code
+      when :bad_request
+        parse = JSON.parse(response.body)
+        raise AMPBadRequestError.new(msg: parse["errors"])
+      when :unauthorized
         raise AMPUnauthorizedError
       else
-        raise AMPResponseError.new(msg: response.message)
+        raise AMPResponseError.new(msg: response.code + ": " + response.body)
       end
       output
     end
 
-    def scrape_response(message, value)
+    def scrape_response(message)
       output = []
       parse = JSON.parse(message)
+      type = parse["metadata"]["links"]["self"]
+      name = (type.include?("computers")) ? "hostname" : "name"
       parse["data"].each do |item|
-        output << item[value]
+        output << item[name]
       end
       output
     end
