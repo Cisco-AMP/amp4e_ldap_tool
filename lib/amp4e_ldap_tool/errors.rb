@@ -17,6 +17,12 @@ module Amp4eLdapTool
     end
   end
 
+  class AMPInvalidFormatError < ArgumentError
+    def initialize(msg: "The GUID provided does not follow the correct format")
+      super
+    end
+  end
+
   class AMPResponseError < StandardError
     def initialize(msg: "The AMP Server returned a non-OK response")
       super
