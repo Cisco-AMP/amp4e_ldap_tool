@@ -4,8 +4,7 @@ require 'amp4e_ldap_tool/errors'
 require 'json'
 
 module Amp4eLdapTool
-  GUID = %r{^([0-9a-f]{8})-([0-9a-f]{4})-([0-9a-f]{4})-
-            ([0-9a-f]{2})([0-9a-f]{2})-([0-9a-f]{12})$}x
+  GUID = /\A\h{8}-\h{4}-\h{4}-\h{4}-\h{12}\z/
 
   class CiscoAMP
     
@@ -75,7 +74,8 @@ module Amp4eLdapTool
         parse = JSON.parse(response.body)
         raise AMPBadRequestError.new(msg: parse["errors"])
       when :unauthorized
-        raise AMPUnauthorizedError
+        parse = JSON.parse(response.body)
+        raise AMPUnauthorizedError.new(msg: parse["errors"])
       else
         raise AMPResponseError.new(msg: response.code + ": " + response.body)
       end
