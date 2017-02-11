@@ -5,6 +5,12 @@ require 'yaml'
 require 'json'
 
 describe Amp4eLdapTool::CiscoAMP do
+  let(:ok)            { "200" }
+  let(:accepted)      { "201" }
+  let(:created)       { "202" }
+  let(:unauthorized)  { "401"}
+  let(:bad_request)   { "400" }
+  let(:internal_server_error){ "500" }
   let(:amp)     { Amp4eLdapTool::CiscoAMP.new}
   let(:email)   { "test@email.com" }
   let(:host)    { "https://localhost:3000" }
@@ -43,7 +49,7 @@ describe Amp4eLdapTool::CiscoAMP do
       let(:group_guid)  { "88888888-4444-4444-2222-121212121212" }
       let(:parent_guid) { "99999999-3333-2222-1111-121212121212" }
       let(:uri)         { URI("#{host}/#{version}/groups/#{group_guid}/parent") }
-      let(:response)    { double("resp", body: body, code: :accepted) }
+      let(:response)    { double("resp", body: body, code: accepted) }
       
       before(:each) do
         allow(Net::HTTP).to receive(:start).and_return(response)
@@ -51,17 +57,17 @@ describe Amp4eLdapTool::CiscoAMP do
           .with(uri).and_return(Net::HTTP::Patch.new(uri))
       end 
       it 'gives a group a parent' do
-        expect(amp.update_group(group_guid, parent_guid)).to eq(:accepted)
+        expect(amp.update_group(group_guid, parent_guid)).to eq(accepted)
       end
       it 'orphans a group to root' do
-        expect(amp.update_group(group_guid, nil)).to eq(:accepted)
+        expect(amp.update_group(group_guid, nil)).to eq(accepted)
       end
     end
   end
 
   context '#create_group' do
     let(:uri)       { URI("#{host}/#{version}/groups/") }
-    let(:response)  { double("resp", body: body, code: :created) }
+    let(:response)  { double("resp", body: body, code: created) }
     
     before(:each) do
       expect(Net::HTTP::Post).to receive(:new)
@@ -73,12 +79,12 @@ describe Amp4eLdapTool::CiscoAMP do
       
       it 'creates a group' do
         allow(Net::HTTP).to receive(:start).and_return(response)
-        expect(amp.create_group(group)).to eq(:created)
+        expect(amp.create_group(group)).to eq(created)
       end
     end
     context 'with a created group' do
       let(:body)      { {}.to_json }
-      let(:response)  { double("resp", body: body, code: :internal_server_error)}
+      let(:response)  { double("resp", body: body, code: internal_server_error)}
 
       xit 'returns server error until a better response can be built' do
         allow(Net::HTTP).to receive(:start).and_return(response) 
@@ -92,17 +98,17 @@ describe Amp4eLdapTool::CiscoAMP do
     context 'with a valid request' do
       let(:new_group) { "88888888-4444-4444-2222-121212121212" }
       let(:body)      { {data: {hostname: computer}}.to_json }
-      let(:response)  { double("resp", body: body, code: :accepted) }
+      let(:response)  { double("resp", body: body, code: accepted) }
 
       it 'moves a pc from one group to another' do
         allow(Net::HTTP).to receive(:start).and_return(response)
-        expect(amp.update_computer(computer, new_group)).to eq(:accepted)
+        expect(amp.update_computer(computer, new_group)).to eq(accepted)
       end
 		end
     context 'with valid inputs but bad server response' do
       let(:body) { {errors: "error!"}.to_json }
       let(:invalid_group) { "88888888-4444-4444-2222-121212121212" }
-      let(:response) { double("bad_response", body: body, code: :bad_request) }
+      let(:response) { double("bad_response", body: body, code: bad_request) }
 
       it 'raises a Bad Request error' do
         allow(Net::HTTP).to receive(:start).and_return(response)
@@ -130,7 +136,7 @@ describe Amp4eLdapTool::CiscoAMP do
         let(:body)  { {metadata: {links: {self: computers}},
                        data: [{hostname: pc1}, {hostname: pc2}]}.to_json}
         it 'sends an api request for a list of computers' do
-          response = double("response", body: body, code: :ok)
+          response = double("response", body: body, code: ok)
           allow(Net::HTTP).to receive(:start).and_return(response)
           expect(amp.get(computers)).to match_array([pc1, pc2])
         end
@@ -141,7 +147,7 @@ describe Amp4eLdapTool::CiscoAMP do
         let(:body){   {metadata: {links: {self: groups}},
                            data: [{name: group1}, {name: group2}]}.to_json}
         it 'sends an api request for a list of groups' do
-          response = double("response", body: body, code: :ok)
+          response = double("response", body: body, code: ok)
           allow(Net::HTTP).to receive(:start).and_return(response)
           expect(amp.get(groups)).to match_array([group1, group2])
         end
@@ -151,7 +157,7 @@ describe Amp4eLdapTool::CiscoAMP do
     context 'with bad creds' do
       let(:body)     {{errors: [{ error_code: 401, description: "Unauthorized",
                        details: ["Unknown API key or Client ID"]}]}.to_json}
-      let(:response) { double("response", body: body, code: :unauthorized) }
+      let(:response) { double("response", body: body, code: unauthorized) }
 
       it 'should return invalid creds response' do
         allow(Net::HTTP).to receive(:start).and_return(response)
