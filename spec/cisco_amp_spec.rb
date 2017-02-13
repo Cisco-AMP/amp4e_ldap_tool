@@ -18,7 +18,7 @@ describe Amp4eLdapTool::CiscoAMP do
   end
   
   context '#initialize' do
-    let(:bad) { "a_bad_hostname" }
+    let(:bad_hostname) { "a_bad_hostname" }
 
     it 'creates a valid web object for amp' do
       expect(amp.base_url).to eq(config[:amp][:host])
@@ -32,7 +32,7 @@ describe Amp4eLdapTool::CiscoAMP do
       expect{Amp4eLdapTool::CiscoAMP.new}.to raise_error(Amp4eLdapTool::AMPConfigError)
     end
     it 'throws an error with a bad  URI' do
-      config[:amp][:host] = bad
+      config[:amp][:host] = bad_hostname
       expect{Amp4eLdapTool::CiscoAMP.new}.to raise_error(Amp4eLdapTool::AMPBadURIError)
     end
   end
@@ -40,8 +40,8 @@ describe Amp4eLdapTool::CiscoAMP do
   context '#update_group' do
     context 'with valid inputs' do
       let(:body)        { {}.to_json }
-      let(:group_guid)  { "some_group_guid" }
-      let(:parent_guid) { "some_parent_guid" }
+      let(:group_guid)  { "88888888-4444-4444-2222-121212121212" }
+      let(:parent_guid) { "99999999-3333-2222-1111-121212121212" }
       let(:uri)         { URI("#{host}/#{version}/groups/#{group_guid}/parent") }
       let(:response)    { double("resp", body: body, code: :accepted) }
       
@@ -87,10 +87,10 @@ describe Amp4eLdapTool::CiscoAMP do
   end
 
 	context '#update_computer' do
-    let(:computer)  { "computer_guid"}
+    let(:computer)  { "11111111-2222-3333-4444-555555555555"}
 		
     context 'with a valid request' do
-      let(:new_group) { "some_group_guid" }
+      let(:new_group) { "88888888-4444-4444-2222-121212121212" }
       let(:body)      { {data: {hostname: computer}}.to_json }
       let(:response)  { double("resp", body: body, code: :accepted) }
 
@@ -99,15 +99,22 @@ describe Amp4eLdapTool::CiscoAMP do
         expect(amp.update_computer(computer, new_group)).to eq(:accepted)
       end
 		end
-    context 'with bad inputs' do
+    context 'with valid inputs but bad server response' do
       let(:body) { {errors: "error!"}.to_json }
-      let(:bad_group) { "bad_group_guid" }
+      let(:invalid_group) { "88888888-4444-4444-2222-121212121212" }
       let(:response) { double("bad_response", body: body, code: :bad_request) }
 
       it 'raises a Bad Request error' do
         allow(Net::HTTP).to receive(:start).and_return(response)
-        expect{amp.update_computer(computer, bad_group)}
+        expect{amp.update_computer(computer, invalid_group)}
           .to raise_error(Amp4eLdapTool::AMPBadRequestError)
+      end
+    end
+    context 'with invalid inputs' do
+      let(:bad_group_guid) { "some_bad_guid"}
+      it 'raises a bad format error' do
+        expect{amp.update_computer(computer, bad_group_guid)}
+          .to raise_error(Amp4eLdapTool::AMPInvalidFormatError)
       end
     end
 	end

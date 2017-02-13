@@ -4,6 +4,8 @@ require 'amp4e_ldap_tool/errors'
 require 'json'
 
 module Amp4eLdapTool
+  GUID = /\A\h{8}-\h{4}-\h{4}-\h{4}-\h{12}\z/
+
   class CiscoAMP
     
     attr_reader :base_url, :version, :email, :third_party, :api_key
@@ -26,6 +28,7 @@ module Amp4eLdapTool
     end
 
     def update_computer(computer_guid, new_guid)
+      validate_guid([computer_guid, new_guid])
       url = URI(@base_url + "/#{@version}/computers/#{computer_guid}")
       patch = Net::HTTP::Patch.new(url)
       body = { group_guid: new_guid }
@@ -33,6 +36,7 @@ module Amp4eLdapTool
     end
 
     def update_group(group_guid, parent = nil)
+      validate_guid([group_guid])
       url = URI(@base_url + "/#{@version}/groups/#{group_guid}/parent")
       patch = Net::HTTP::Patch.new(url)
       body = { parent_guid: parent }
@@ -70,7 +74,8 @@ module Amp4eLdapTool
         parse = JSON.parse(response.body)
         raise AMPBadRequestError.new(msg: parse["errors"])
       when :unauthorized
-        raise AMPUnauthorizedError
+        parse = JSON.parse(response.body)
+        raise AMPUnauthorizedError.new(msg: parse["errors"])
       else
         raise AMPResponseError.new(msg: response.code + ": " + response.body)
       end
@@ -86,6 +91,14 @@ module Amp4eLdapTool
         output << item[name]
       end
       output
+    end
+
+    def validate_guid(guids)
+      guids.each do |guid|
+        if Amp4eLdapTool::GUID.match(guid).nil?
+          raise AMPInvalidFormatError
+        end
+      end
     end
 
     def confirm_config(config)
