@@ -5,22 +5,23 @@ require 'json'
 require 'net/ldap'
 
 describe Amp4eLdapTool::LDAPScrape do
-  let(:ldap) { Amp4eLdapTool::LDAPScrape.new }
-  let(:email) { 'test.email.com' }
-  let(:host) { 'http://localhost:3000' }
-  let(:un) { 'testuser' }
-  let(:pw) { 'testpassword' }
-  let(:filter) { 'computer' }
-  let(:attributes) { 'cn' }
-  let(:config) { {ldap: { host: host, email: email, 
-          credentials: { un: un, pw: pw },
-               schema: { filter: filter, attributes: attributes }}}}
-  let(:entry) { Net::LDAP::Entry.new('dc=com') }
-  let(:entry2) { Net::LDAP::Entry.new('dc=com2') }
-  let(:entry3) { Net::LDAP::Entry.new('dc=com3') }
-  let(:d_name) { 'cn=pc,dc=server,dc=host' }
-  let(:server) { double('ldapserver') }
-  
+  let(:ldap)        { Amp4eLdapTool::LDAPScrape.new }
+  let(:email)       { 'test.email.com' }
+  let(:host)        { 'http://localhost:3000' }
+  let(:un)          { 'testuser' }
+  let(:pw)          { 'testpassword' }
+  let(:filter)      { 'computer' }
+  let(:attributes)  { 'cn' }
+  let(:domain)      { 'some.domain' }
+  let(:config)      { {ldap: { host: host, email: email, domain: domain, 
+                    credentials: { un: un, pw: pw },
+                    schema: { filter: filter, attributes: attributes }}}}
+  let(:entry)       { Net::LDAP::Entry.new('dc=com') }
+  let(:entry2)      { Net::LDAP::Entry.new('dc=com2') }
+  let(:entry3)      { Net::LDAP::Entry.new('dc=com3') }
+  let(:d_name)      { 'cn=pc,dc=server,dc=host' }
+  let(:server)      { double('ldapserver') }
+
   before(:each) do
     allow(YAML).to receive(:load_file).and_return(config)
   end
@@ -47,6 +48,14 @@ describe Amp4eLdapTool::LDAPScrape do
     it 'returns parsed dn names' do
       allow(Net::LDAP).to receive(:new).and_return(server)
       expect(ldap.parse_dn(d_name)).to eq(['host', 'server.host', 'pc.server.host'])
+    end
+  end
+
+  context '#make_distinguished' do
+    let(:distinguish) { 'dc=some,dc=domain' }
+    it 'returns dn' do
+      allow(Net::LDAP).to receive(:new).and_return(server)
+      expect(ldap.make_distinguished(domain)).to eq(distinguish)
     end
   end
 end

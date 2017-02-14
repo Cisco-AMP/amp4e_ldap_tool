@@ -1,5 +1,6 @@
 require 'thor'
 require 'amp4e_ldap_tool/cisco_amp'
+require 'amp4e_ldap_tool/ldap_scrape'
 
 module Amp4eLdapTool
   class CLI < Thor
@@ -16,6 +17,7 @@ module Amp4eLdapTool
     LONGDESC
     method_option :groups, aliases: "-g" 
     method_option :computers, aliases: "-c"
+    method_option :distingusihed, aliases: "-d"
     def fetch(source)
       case source.downcase
       when "amp"
@@ -23,7 +25,8 @@ module Amp4eLdapTool
         puts amp.get("computers") unless options[:computers].nil?
         puts amp.get("groups") unless options[:groups].nil?
       when "ldap"
-      
+        ldap = Amp4eLdapTool::LDAPScrape.new 
+        ldap.scrape_ldap_entries.each { |entry| puts entry.dn } unless options[:distingusihed].nil? 
       else
         puts "I couldn't understand SOURCE, for now specify amp or ldap"
       end
