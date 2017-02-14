@@ -31,7 +31,7 @@ describe Amp4eLdapTool::LDAPScrape do
   end
 
   context 'with a valid instance' do
-    let(:server)  { double('ldapserver') }
+    let(:server)        { double('ldapserver') }
     let(:distinguished) { 'cn=computer1,dc=server,dc=host' }
     
     before(:each) do
@@ -57,6 +57,7 @@ describe Amp4eLdapTool::LDAPScrape do
       it 'returns parsed dn names' do
         expect(ldap.get_groups(distinguished)).to eq(['host', 'server.host'])
       end
+      
       context 'multiple same named groups' do
         it 'should not return a new group to add' do
           expect(ldap.get_groups(distinguished)).to eq(['host', 'server.host']) 
@@ -71,7 +72,6 @@ describe Amp4eLdapTool::LDAPScrape do
       it 'returns a computer name' do
         expect(ldap.get_computer(distinguished)).to eq(computer)
       end
-
     end
 
     context '#make_distinguished' do
