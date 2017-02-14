@@ -66,18 +66,18 @@ module Amp4eLdapTool
     def check_response(response)
       output = []
       case response.code
-      when :ok
+      when "200"
         output = scrape_response(response.body)
-      when :accepted, :created
+      when "201", "202"
         output = response.code
-      when :bad_request
+      when "400"
         parse = JSON.parse(response.body)
         raise AMPBadRequestError.new(msg: parse["errors"])
-      when :unauthorized
+      when "401"
         parse = JSON.parse(response.body)
         raise AMPUnauthorizedError.new(msg: parse["errors"])
       else
-        raise AMPResponseError.new(msg: response.code + ": " + response.body)
+        raise AMPResponseError.new(msg: "code: " + response.code + " body: " + response.body)
       end
       output
     end
