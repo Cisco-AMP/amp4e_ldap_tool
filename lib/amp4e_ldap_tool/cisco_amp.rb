@@ -10,7 +10,6 @@ module Amp4eLdapTool
     
     attr_reader :base_url, :version, :email, :third_party, :api_key
 
-
     def initialize(config_file = "config.yml")
       config = YAML.load_file(config_file)
       confirm_config(config)
