@@ -13,7 +13,8 @@ module Amp4eLdapTool
       @attributes = cfg[:ldap][:schema][:attributes]
       @filter = Net::LDAP::Filter.eq('objectClass', cfg[:ldap][:schema][:filter])
       @domain = cfg[:ldap][:host]
-      
+      @full_name = make_distinguished(cfg[:ldap][:domain])
+
       @server = Net::LDAP.new(
         host: cfg[:ldap][:host],
         auth: {
@@ -45,6 +46,14 @@ module Amp4eLdapTool
         temp_array.pop
       end
       dn_paths.reverse
+    end
+    
+    def make_distinguished(domain_name)
+      output = ''
+      domain_name.split('.').each do |name|
+        output << "dc=#{name},"
+      end
+      output.chomp(',')
     end
   end
 end

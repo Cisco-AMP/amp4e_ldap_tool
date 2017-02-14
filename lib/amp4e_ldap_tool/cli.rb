@@ -1,5 +1,6 @@
 require 'thor'
 require 'amp4e_ldap_tool/cisco_amp'
+require 'amp4e_ldap_tool/ldap_scrape'
 
 module Amp4eLdapTool
   class CLI < Thor
@@ -23,7 +24,10 @@ module Amp4eLdapTool
         puts amp.get("computers") unless options[:computers].nil?
         puts amp.get("groups") unless options[:groups].nil?
       when "ldap"
-      
+        ldap = Amp4eLdapTool::LDAPScrape.new 
+        ldap.scrape_ldap_entries.each do |entry|
+          puts entry.dn
+        end
       else
         puts "I couldn't understand SOURCE, for now specify amp or ldap"
       end
