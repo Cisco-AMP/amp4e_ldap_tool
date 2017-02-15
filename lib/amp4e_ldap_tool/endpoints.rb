@@ -7,9 +7,12 @@ module Amp4eLdapTool
       def initialize(json)
         @hostname = json["hostname"]
         @connector_guid = json["connector_guid"]
-        @link = json["links"]["computer"]
+        @link = { computer: json["links"]["computer"],
+                  trajectory: json["links"]["trajectory"],
+                  groups: json["links"]["group"]}
         @active = json["active"]
-        @policy = {}
+        @policy = { name: json["policy"]["name"],
+                    guid: json["policy"]["guid"] }
         @group_guid = json["group_guid"]
         @os = json["operating_system"]
       end

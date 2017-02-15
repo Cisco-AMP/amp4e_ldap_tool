@@ -1,24 +1,25 @@
 require 'spec_helper'
 require 'amp4e_ldap_tool/cisco_amp'
 require 'amp4e_ldap_tool/errors'
+require 'amp4e_ldap_tool/endpoints'
 require 'yaml'
 require 'json'
 
 describe Amp4eLdapTool::CiscoAMP do
+  let(:internal_server_error){ "500" }
   let(:ok)            { "200" }
   let(:accepted)      { "201" }
   let(:created)       { "202" }
   let(:unauthorized)  { "401"}
   let(:bad_request)   { "400" }
-  let(:internal_server_error){ "500" }
-  let(:amp)     { Amp4eLdapTool::CiscoAMP.new}
-  let(:email)   { "test@email.com" }
-  let(:host)    { "https://localhost:3000" }
-  let(:key)     { "akey" }
-  let(:version) { "v1" }
-  let(:third)   { "123456789" }
-  let(:config)  { {amp: {host: host, email: email,
-                   api: {third_party: third, key: key, version: version}}}}
+  let(:amp)           { Amp4eLdapTool::CiscoAMP.new}
+  let(:email)         { "test@email.com" }
+  let(:host)          { "https://localhost:3000" }
+  let(:key)           { "akey" }
+  let(:version)       { "v1" }
+  let(:third)         { "123456789" }
+  let(:config)        { {amp: {host: host, email: email,
+                         api: {third_party: third, key: key, version: version}}}}
   before(:each) do
     allow(YAML).to receive(:load_file).and_return(config)
   end
@@ -126,30 +127,80 @@ describe Amp4eLdapTool::CiscoAMP do
 	end
 
   context '#get' do
-    let(:computers) { "computers" }
-    let(:groups)  { "groups" }
+    let(:computers)       { "computers" }
+    let(:groups)          { "groups" }
+    let(:policies)        { "policies" }
     
+    let(:group_guid)      { "88888888-4444-4444-2222-121212121212" }
+    let(:group_endpoint)  { "api_endpoint_to_group" }
+    let(:traj_endpoint)   { "api_endpoint_to_trajectory" }
+    let(:policy_name)     { "a_policy" }
+    let(:policy_guid)     { "11111111-1111-1111-1111-777777777777" }
+    let(:policy_endpoint) { "api_endpoint_to_policy" }
+
     context 'with good creds and valid request' do
       context 'computers' do
-        let(:pc1)   { "computer1" }
-        let(:pc2)   { "computer2" }
-        let(:body)  { {metadata: {links: {self: computers}},
-                       data: [{hostname: pc1}, {hostname: pc2}]}.to_json}
+        let(:hostname)    { "computer_name" }
+        let(:guid)        { "11111111-5555-5555-3333-999999999999" }
+        let(:active)      { true }
+        let(:pc_endpoint) { "api_endpoint_to_computer" }
+        let(:os)          { "Windows 10, SP 0.0" }
+        let(:body)        { {data: [{hostname: hostname, connector_guid: guid, 
+                                     active: active, group_guid: group_guid, 
+                                     operating_system: os,
+                                     links: {computer: pc_endpoint,
+                                             trajectory: traj_endpoint,
+                                             groups: group_endpoint },
+                                     policy: {name: policy_name, 
+                                              guid: policy_guid}}]}.to_json }
+
         it 'sends an api request for a list of computers' do
           response = double("response", body: body, code: ok)
           allow(Net::HTTP).to receive(:start).and_return(response)
-          expect(amp.get(computers)).to match_array([pc1, pc2])
+          expect(amp.get(computers).first.hostname).to eq(hostname)
+          expect(amp.get(computers).first.connector_guid).to eq(guid)
+          expect(amp.get(computers).first.link[:computer]).to eq(pc_endpoint)
+          expect(amp.get(computers).first.active).to eq(active)
+          expect(amp.get(computers).first.group_guid).to eq(group_guid)
+          expect(amp.get(computers).first.policy[:name]).to eq(policy_name)
+          expect(amp.get(computers).first.os).to eq(os)
+        end
+      end
+      context 'policies' do
+        let(:desc)        { "a mock policy description" }
+        let(:product)     { "windows" }
+        let(:default)     { false }
+        let(:serial_num)  { 1 }
+        let(:body)        { { data: [{name: policy_name, description: desc,
+                                  guid: policy_guid, product: product,
+                                  default: default, serial_number: serial_num,
+                                  links: {policy: policy_endpoint}}]}.to_json }
+        let(:response)    { double("response", body: body, code: ok) }
+
+        it 'sends an api request for a list of policies' do
+          allow(Net::HTTP).to receive(:start).and_return(response)
+          expect(amp.get(policies).first.name).to eq(policy_name)
+          expect(amp.get(policies).first.product).to eq(product)
+          expect(amp.get(policies).first.description).to eq(desc)
+          expect(amp.get(policies).first.link).to eq(policy_endpoint)
+          expect(amp.get(policies).first.guid).to eq(policy_guid)
+          expect(amp.get(policies).first.serial_number).to eq(serial_num)
+          expect(amp.get(policies).first.default).to eq(default)
         end
       end
       context 'groups' do
-        let(:group1)  { "group_1" }
-        let(:group2)  { "group_2" }
-        let(:body){   {metadata: {links: {self: groups}},
-                           data: [{name: group1}, {name: group2}]}.to_json}
+        let(:name)    { "group_name" }
+        let(:desc)    { "a mock group" }
+        let(:body)    { {data: [{name: name, links: {group: group_endpoint}, 
+                                 description: desc, group_guid: group_guid}]}.to_json }
+        let(:response){ double("response", body: body, code: ok) }
+
         it 'sends an api request for a list of groups' do
-          response = double("response", body: body, code: ok)
           allow(Net::HTTP).to receive(:start).and_return(response)
-          expect(amp.get(groups)).to match_array([group1, group2])
+          expect(amp.get(groups).first.name).to eq(name)
+          expect(amp.get(groups).first.description).to eq(desc)
+          expect(amp.get(groups).first.guid).to eq(group_guid)
+          expect(amp.get(groups).first.link).to eq(group_endpoint)
         end
       end
     end
