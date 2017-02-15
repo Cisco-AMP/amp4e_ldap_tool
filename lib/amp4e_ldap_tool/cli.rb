@@ -15,7 +15,8 @@ module Amp4eLdapTool
 
     > $ groupsync fetch AMP -c
     LONGDESC
-    method_option :groups, aliases: "-g" 
+    method_option :groups, aliases: "-g"
+    method_option :policies, aliases: "-p"
     method_option :computers, aliases: "-c"
     method_option :distingusihed, aliases: "-d"
     def fetch(source)
@@ -24,6 +25,7 @@ module Amp4eLdapTool
         amp = Amp4eLdapTool::CiscoAMP.new
         puts amp.get("computers") unless options[:computers].nil?
         puts amp.get("groups") unless options[:groups].nil?
+        puts amp.get("policies") unless options[:policies].nil?
       when "ldap"
         ldap = Amp4eLdapTool::LDAPScrape.new 
         ldap.scrape_ldap_entries.each { |entry| puts entry.dn } unless options[:distingusihed].nil? 
