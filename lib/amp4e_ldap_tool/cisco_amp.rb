@@ -88,12 +88,15 @@ module Amp4eLdapTool
       endpoints = []
       parse = JSON.parse(message)
       parse["data"].each do |item|
-        if endpoint == "computers"
+        case endpoint
+        when :computers
           endpoints << Amp4eLdapTool::AMP::Computer.new(item)
-        elsif endpoint == "groups"
+        when :groups
           endpoints << Amp4eLdapTool::AMP::Group.new(item)
-        else
+        when :policies
           endpoints << Amp4eLdapTool::AMP::Policy.new(item)
+        else
+          raise AMPResponseError.new(msg: "Parsing GET error for #{endpoint}")
         end
       end
       endpoints

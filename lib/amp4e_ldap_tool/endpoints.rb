@@ -1,15 +1,15 @@
 module Amp4eLdapTool
   module AMP
     class Computer
-      attr_accessor :hostname, :connector_guid, :link, :active,
+      attr_accessor :name, :guid, :link, :active,
                     :group_guid, :policy, :os
 
       def initialize(json)
-        @hostname = json["hostname"]
-        @connector_guid = json["connector_guid"]
+        @name = json["hostname"]
+        @guid = json["connector_guid"]
         @link = { computer: json["links"]["computer"],
-                  trajectory: json["links"]["trajectory"],
-                  groups: json["links"]["group"]}
+                    trajectory: json["links"]["trajectory"],
+                    groups: json["links"]["group"]}
         @active = json["active"]
         @policy = { name: json["policy"]["name"],
                     guid: json["policy"]["guid"] }
@@ -27,8 +27,8 @@ module Amp4eLdapTool
         @description = json["description"]
         @link = json["links"]["group"]
         @parent = (json["ancestry"].nil?) ? {} :
-          {name: json["ancestry"].first["name"],
-           guid: json["ancestry"].first["guid"]}
+            {name: json["ancestry"].first["name"],
+             guid: json["ancestry"].first["guid"]}
       end
     end
 
