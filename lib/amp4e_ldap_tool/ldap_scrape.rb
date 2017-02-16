@@ -14,7 +14,7 @@ module Amp4eLdapTool
       @filter = Net::LDAP::Filter.eq('objectClass', cfg[:ldap][:schema][:filter])
       @domain = cfg[:ldap][:host]
       @full_name = make_distinguished(cfg[:ldap][:domain])
-
+      @cache = {}
       @server = Net::LDAP.new(
         host: cfg[:ldap][:host],
         auth: {
@@ -32,20 +32,17 @@ module Amp4eLdapTool
       entry_list
     end
 
-    def parse_dn(d_name)
+    def get_computer(distinguished_name)
+      distinguished_name.split(',').first.split('=').last
+    end
+
+    def get_groups(distinguished_name)
       relative_names = []
-      dn_paths = []
-       
-      d_name.split(',').each do |name|
+      distinguished_name.split(',').each do |name|
         relative_names << name.split('=').last
       end
-
-      temp_array = relative_names.reverse.clone
-      relative_names.each do
-        dn_paths << temp_array.inject { |glob, value| "#{value}.#{glob}" }
-        temp_array.pop
-      end
-      dn_paths.reverse
+      relative_names.shift
+      make_group_names(relative_names).reverse
     end
     
     def make_distinguished(domain_name)
@@ -54,6 +51,23 @@ module Amp4eLdapTool
         output << "dc=#{name},"
       end
       output.chomp(',')
+    end
+
+    private
+
+    def make_group_names(relative_names)
+      dn_paths = []
+      temp_array = relative_names.reverse.clone
+      
+      relative_names.each do
+        name = temp_array.inject { |glob, value| "#{value}.#{glob}" }
+        if @cache[name].nil? 
+          dn_paths << name
+          @cache[name] = 1
+        end
+        temp_array.pop
+      end
+      dn_paths
     end
   end
 end
