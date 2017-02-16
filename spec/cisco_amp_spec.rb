@@ -1,4 +1,3 @@
-require 'spec_helper'
 require 'amp4e_ldap_tool/cisco_amp'
 require 'amp4e_ldap_tool/errors'
 require 'yaml'
