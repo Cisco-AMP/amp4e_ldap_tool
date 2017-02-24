@@ -1,5 +1,4 @@
 require 'amp4e_ldap_tool/cli'
-require 'json'
 
 describe Amp4eLdapTool::CLI do
   let(:subject)   { Amp4eLdapTool::CLI.new }

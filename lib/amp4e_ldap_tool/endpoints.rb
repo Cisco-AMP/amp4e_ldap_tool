@@ -12,7 +12,7 @@ module Amp4eLdapTool
         @os         = json["operating_system"]
         @link       = { computer: json["links"]["computer"],
                         trajectory: json["links"]["trajectory"],
-                        groups: json["links"]["group"]}
+                        group: json["links"]["group"]}
         @policy     = { name: json["policy"]["name"],
                         guid: json["policy"]["guid"] }
       end
