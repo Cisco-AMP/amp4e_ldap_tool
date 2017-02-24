@@ -1,6 +1,7 @@
 require 'net/http'
 require 'yaml'
 require 'amp4e_ldap_tool/errors'
+require 'amp4e_ldap_tool/endpoints'
 require 'json'
 
 module Amp4eLdapTool
@@ -24,7 +25,8 @@ module Amp4eLdapTool
     def get(endpoint)
       url = URI(@base_url + "/#{@version}/#{endpoint}")
       get = Net::HTTP::Get.new(url)
-      send(get, url)
+      response = send(get, url)
+      parse_response(response, endpoint)
     end
 
     def update_computer(computer_guid, new_guid)
@@ -64,10 +66,10 @@ module Amp4eLdapTool
     end
 
     def check_response(response)
-      output = []
+      output = ""
       case response.code
       when "200"
-        output = scrape_response(response.body)
+        output = response.body
       when "201", "202"
         output = response.code
       when "400"
@@ -82,15 +84,19 @@ module Amp4eLdapTool
       output
     end
 
-    def scrape_response(message)
-      output = []
+    def parse_response(message, endpoint)
+      endpoints = []
       parse = JSON.parse(message)
-      type = parse["metadata"]["links"]["self"]
-      name = (type.include?("computers")) ? "hostname" : "name"
       parse["data"].each do |item|
-        output << item[name]
+        if endpoint == "computers"
+          endpoints << Amp4eLdapTool::AMP::Computer.new(item)
+        elsif endpoint == "groups"
+          endpoints << Amp4eLdapTool::AMP::Group.new(item)
+        else
+          endpoints << Amp4eLdapTool::AMP::Policy.new(item)
+        end
       end
-      output
+      endpoints
     end
 
     def validate_guid(guids)
