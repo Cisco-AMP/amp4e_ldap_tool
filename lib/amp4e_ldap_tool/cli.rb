@@ -28,7 +28,7 @@ module Amp4eLdapTool
         puts amp.get("policies") unless options[:policies].nil?
       when "ldap"
         ldap = Amp4eLdapTool::LDAPScrape.new 
-        ldap.scrape_ldap_entries.each { |entry| puts entry.dn } unless options[:distingusihed].nil? 
+        ldap.scrape_ldap_entries.each { |entry| puts entry.dn } unless options[:distinguished].nil? 
       else
         puts "I couldn't understand SOURCE, for now specify amp or ldap"
       end

@@ -1,4 +1,3 @@
-require 'spec_helper'
 require 'amp4e_ldap_tool/ldap_scrape'
 require 'yaml'
 require 'json'
