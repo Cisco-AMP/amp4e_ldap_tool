@@ -26,7 +26,7 @@ module Amp4eLdapTool
       url = URI(@base_url + "/#{@version}/#{endpoint}")
       get = Net::HTTP::Get.new(url)
       response = send(get, url)
-      parse_response(response, endpoint)
+      parse_response(response, endpoint.to_sym)
     end
 
     def update_computer(computer_guid, new_guid)
