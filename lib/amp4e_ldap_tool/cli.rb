@@ -48,16 +48,11 @@ module Amp4eLdapTool
     private
 
     def display_resources(amp, options)
-      case 
-      when options[:computers]
-        computers = amp.get(:computers)
-        computers.each { |x| puts x.name }
-      when options[:groups]
-        groups = amp.get(:groups)
-        groups.each { |x| puts x.name }
-      when options[:policies]
-        groups = amp.get(:policies)
-        groups.each { |x| puts x.name }
+      options.keys.each do |endpoints|
+        puts "#{endpoints}:"
+        amp.get(endpoints).each do |endpoint|
+          puts endpoint.name
+        end
       end
     end
   end

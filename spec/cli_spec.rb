@@ -21,19 +21,19 @@ describe Amp4eLdapTool::CLI do
       it 'gets a list of computers with -c' do
         allow(amp).to receive(:get).with(:computers).and_return(computers)
         subject.options = {computers: true}
-        expect(output).to eq("#{computers[0].name}\n#{computers[1].name}\n")
+        expect(output).to eq("computers:\n#{computers[0].name}\n#{computers[1].name}\n")
       end
 
       it 'gets a list of groups with -g' do
         allow(amp).to receive(:get).with(:groups).and_return(groups)
         subject.options = {groups: true}
-        expect(output).to eq("#{groups[0].name}\n#{groups[1].name}\n")
+        expect(output).to eq("groups:\n#{groups[0].name}\n#{groups[1].name}\n")
       end
 
       it 'gets a list of policies with -p' do
         allow(amp).to receive(:get).with(:policies).and_return(policies) 
         subject.options = {policies: true}
-        expect(output).to eq("#{policies[0].name}\n#{policies[1].name}\n")
+        expect(output).to eq("policies:\n#{policies[0].name}\n#{policies[1].name}\n")
       end
     end
 
