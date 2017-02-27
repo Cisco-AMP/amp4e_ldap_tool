@@ -126,10 +126,6 @@ describe Amp4eLdapTool::CiscoAMP do
 	end
 
   context '#get' do
-    let(:computers)       { "computers" }
-    let(:groups)          { "groups" }
-    let(:policies)        { "policies" }
-    
     let(:group_guid)      { "88888888-4444-4444-2222-121212121212" }
     let(:group_endpoint)  { "api_endpoint_to_group" }
     let(:traj_endpoint)   { "api_endpoint_to_trajectory" }
@@ -139,12 +135,12 @@ describe Amp4eLdapTool::CiscoAMP do
 
     context 'with good creds and valid request' do
       context 'computers' do
-        let(:hostname)    { "computer_name" }
+        let(:name)        { "computer_name" }
         let(:guid)        { "11111111-5555-5555-3333-999999999999" }
         let(:active)      { true }
         let(:pc_endpoint) { "api_endpoint_to_computer" }
         let(:os)          { "Windows 10, SP 0.0" }
-        let(:body)        { {data: [{hostname: hostname, connector_guid: guid, 
+        let(:body)        { {data: [{hostname: name, connector_guid: guid, 
                                      active: active, group_guid: group_guid, 
                                      operating_system: os,
                                      links: {computer: pc_endpoint,
@@ -156,13 +152,13 @@ describe Amp4eLdapTool::CiscoAMP do
         it 'sends an api request for a list of computers' do
           response = double("response", body: body, code: ok)
           allow(Net::HTTP).to receive(:start).and_return(response)
-          expect(amp.get(computers).first.hostname).to eq(hostname)
-          expect(amp.get(computers).first.connector_guid).to eq(guid)
-          expect(amp.get(computers).first.link[:computer]).to eq(pc_endpoint)
-          expect(amp.get(computers).first.active).to eq(active)
-          expect(amp.get(computers).first.group_guid).to eq(group_guid)
-          expect(amp.get(computers).first.policy[:name]).to eq(policy_name)
-          expect(amp.get(computers).first.os).to eq(os)
+          expect(amp.get(:computers).first.name).to eq(name)
+          expect(amp.get(:computers).first.guid).to eq(guid)
+          expect(amp.get(:computers).first.link[:computer]).to eq(pc_endpoint)
+          expect(amp.get(:computers).first.active).to eq(active)
+          expect(amp.get(:computers).first.group_guid).to eq(group_guid)
+          expect(amp.get(:computers).first.policy[:name]).to eq(policy_name)
+          expect(amp.get(:computers).first.os).to eq(os)
         end
       end
       context 'policies' do
@@ -178,13 +174,13 @@ describe Amp4eLdapTool::CiscoAMP do
 
         it 'sends an api request for a list of policies' do
           allow(Net::HTTP).to receive(:start).and_return(response)
-          expect(amp.get(policies).first.name).to eq(policy_name)
-          expect(amp.get(policies).first.product).to eq(product)
-          expect(amp.get(policies).first.description).to eq(desc)
-          expect(amp.get(policies).first.link).to eq(policy_endpoint)
-          expect(amp.get(policies).first.guid).to eq(policy_guid)
-          expect(amp.get(policies).first.serial_number).to eq(serial_num)
-          expect(amp.get(policies).first.default).to eq(default)
+          expect(amp.get(:policies).first.name).to eq(policy_name)
+          expect(amp.get(:policies).first.product).to eq(product)
+          expect(amp.get(:policies).first.description).to eq(desc)
+          expect(amp.get(:policies).first.link).to eq(policy_endpoint)
+          expect(amp.get(:policies).first.guid).to eq(policy_guid)
+          expect(amp.get(:policies).first.serial_number).to eq(serial_num)
+          expect(amp.get(:policies).first.default).to eq(default)
         end
       end
       context 'groups' do
@@ -196,10 +192,10 @@ describe Amp4eLdapTool::CiscoAMP do
 
         it 'sends an api request for a list of groups' do
           allow(Net::HTTP).to receive(:start).and_return(response)
-          expect(amp.get(groups).first.name).to eq(name)
-          expect(amp.get(groups).first.description).to eq(desc)
-          expect(amp.get(groups).first.guid).to eq(group_guid)
-          expect(amp.get(groups).first.link).to eq(group_endpoint)
+          expect(amp.get(:groups).first.name).to eq(name)
+          expect(amp.get(:groups).first.description).to eq(desc)
+          expect(amp.get(:groups).first.guid).to eq(group_guid)
+          expect(amp.get(:groups).first.link).to eq(group_endpoint)
         end
       end
     end
@@ -211,7 +207,7 @@ describe Amp4eLdapTool::CiscoAMP do
 
       it 'should return invalid creds response' do
         allow(Net::HTTP).to receive(:start).and_return(response)
-        expect{amp.get(computers)}
+        expect{amp.get(:computers)}
           .to raise_error(Amp4eLdapTool::AMPUnauthorizedError)
       end
     end
@@ -222,7 +218,7 @@ describe Amp4eLdapTool::CiscoAMP do
       it 'should throw a connection refused error' do
         config[:amp][:host] = bad_host
         allow(Net::HTTP).to receive(:start).and_raise(Errno::ECONNREFUSED)
-        expect{amp.get(computers)}
+        expect{amp.get(:computers)}
           .to raise_error(Errno::ECONNREFUSED)
       end
     end

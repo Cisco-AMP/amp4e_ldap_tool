@@ -20,15 +20,12 @@ module Amp4eLdapTool
     method_option :computers, aliases: "-c"
     method_option :distingusihed, aliases: "-d"
     def fetch(source)
-      case source.downcase
-      when "amp"
-        amp = Amp4eLdapTool::CiscoAMP.new
-        puts amp.get("computers") unless options[:computers].nil?
-        puts amp.get("groups") unless options[:groups].nil?
-        puts amp.get("policies") unless options[:policies].nil?
-      when "ldap"
+      case source.downcase.to_sym
+      when :amp
+        display_resources(Amp4eLdapTool::CiscoAMP.new, options)
+      when :ldap
         ldap = Amp4eLdapTool::LDAPScrape.new 
-        ldap.scrape_ldap_entries.each { |entry| puts entry.dn } unless options[:distinguished].nil? 
+        ldap.scrape_ldap_entries.each {|entry| puts entry.dn} unless options[:distinguished].nil? 
       else
         puts "I couldn't understand SOURCE, for now specify amp or ldap"
       end
@@ -46,6 +43,17 @@ module Amp4eLdapTool
       amp = Amp4eLdapTool::CiscoAMP.new
       puts amp.create_group(name) unless options[:desc]
       puts amp.create_group(name, options[:desc]) if options[:desc]
+    end
+    
+    private
+
+    def display_resources(amp, options)
+      options.keys.each do |endpoints|
+        puts "#{endpoints}:"
+        amp.get(endpoints).each do |endpoint|
+          puts endpoint.name
+        end
+      end
     end
   end
 end
