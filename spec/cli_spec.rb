@@ -35,6 +35,15 @@ describe Amp4eLdapTool::CLI do
         subject.options = {policies: true}
         expect(output).to eq("policies:\n#{policies[0].name}\n#{policies[1].name}\n")
       end
+
+      it 'gets a list of computers and groups with -cg' do
+        allow(amp).to receive(:get).with(:groups).and_return(groups)
+        allow(amp).to receive(:get).with(:computers).and_return(computers)
+        subject.options = {groups: true, computers: true}
+        results = "groups:\n#{groups[0].name}\n#{groups[1].name}\n"
+        results << "computers:\n#{computers[0].name}\n#{computers[1].name}\n"
+        expect(output).to eq(results)
+      end
     end
 
     context 'ldap' do
