@@ -5,6 +5,9 @@ require 'yaml'
 require 'json'
 
 describe Amp4eLdapTool::CiscoAMP do
+  let(:computers)   { "computers" }
+  let(:groups)      { "groups" }
+  let(:policies)    { "policies" }
   let(:internal_server_error){ "500" }
   let(:ok)            { "200" }
   let(:accepted)      { "201" }
@@ -152,13 +155,13 @@ describe Amp4eLdapTool::CiscoAMP do
         it 'sends an api request for a list of computers' do
           response = double("response", body: body, code: ok)
           allow(Net::HTTP).to receive(:start).and_return(response)
-          expect(amp.get(:computers).first.name).to eq(name)
-          expect(amp.get(:computers).first.guid).to eq(guid)
-          expect(amp.get(:computers).first.link[:computer]).to eq(pc_endpoint)
-          expect(amp.get(:computers).first.active).to eq(active)
-          expect(amp.get(:computers).first.group_guid).to eq(group_guid)
-          expect(amp.get(:computers).first.policy[:name]).to eq(policy_name)
-          expect(amp.get(:computers).first.os).to eq(os)
+          expect(amp.get(computers).first.name).to eq(name)
+          expect(amp.get(computers).first.guid).to eq(guid)
+          expect(amp.get(computers).first.link[:computer]).to eq(pc_endpoint)
+          expect(amp.get(computers).first.active).to eq(active)
+          expect(amp.get(computers).first.group_guid).to eq(group_guid)
+          expect(amp.get(computers).first.policy[:name]).to eq(policy_name)
+          expect(amp.get(computers).first.os).to eq(os)
         end
       end
       context 'policies' do
@@ -174,13 +177,13 @@ describe Amp4eLdapTool::CiscoAMP do
 
         it 'sends an api request for a list of policies' do
           allow(Net::HTTP).to receive(:start).and_return(response)
-          expect(amp.get(:policies).first.name).to eq(policy_name)
-          expect(amp.get(:policies).first.product).to eq(product)
-          expect(amp.get(:policies).first.description).to eq(desc)
-          expect(amp.get(:policies).first.link).to eq(policy_endpoint)
-          expect(amp.get(:policies).first.guid).to eq(policy_guid)
-          expect(amp.get(:policies).first.serial_number).to eq(serial_num)
-          expect(amp.get(:policies).first.default).to eq(default)
+          expect(amp.get(policies).first.name).to eq(policy_name)
+          expect(amp.get(policies).first.product).to eq(product)
+          expect(amp.get(policies).first.description).to eq(desc)
+          expect(amp.get(policies).first.link).to eq(policy_endpoint)
+          expect(amp.get(policies).first.guid).to eq(policy_guid)
+          expect(amp.get(policies).first.serial_number).to eq(serial_num)
+          expect(amp.get(policies).first.default).to eq(default)
         end
       end
       context 'groups' do
@@ -192,10 +195,10 @@ describe Amp4eLdapTool::CiscoAMP do
 
         it 'sends an api request for a list of groups' do
           allow(Net::HTTP).to receive(:start).and_return(response)
-          expect(amp.get(:groups).first.name).to eq(name)
-          expect(amp.get(:groups).first.description).to eq(desc)
-          expect(amp.get(:groups).first.guid).to eq(group_guid)
-          expect(amp.get(:groups).first.link).to eq(group_endpoint)
+          expect(amp.get(groups).first.name).to eq(name)
+          expect(amp.get(groups).first.description).to eq(desc)
+          expect(amp.get(groups).first.guid).to eq(group_guid)
+          expect(amp.get(groups).first.link).to eq(group_endpoint)
         end
       end
     end
@@ -207,7 +210,7 @@ describe Amp4eLdapTool::CiscoAMP do
 
       it 'should return invalid creds response' do
         allow(Net::HTTP).to receive(:start).and_return(response)
-        expect{amp.get(:computers)}
+        expect{amp.get(computers)}
           .to raise_error(Amp4eLdapTool::AMPUnauthorizedError)
       end
     end
@@ -218,7 +221,7 @@ describe Amp4eLdapTool::CiscoAMP do
       it 'should throw a connection refused error' do
         config[:amp][:host] = bad_host
         allow(Net::HTTP).to receive(:start).and_raise(Errno::ECONNREFUSED)
-        expect{amp.get(:computers)}
+        expect{amp.get(computers)}
           .to raise_error(Errno::ECONNREFUSED)
       end
     end
