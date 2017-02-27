@@ -20,12 +20,12 @@ module Amp4eLdapTool
     method_option :computers, aliases: "-c"
     method_option :distingusihed, aliases: "-d"
     def fetch(source)
-      case source.downcase
-      when "amp"
+      case source.downcase.to_sym
+      when :amp
         display_resources(Amp4eLdapTool::CiscoAMP.new, options)
-      when "ldap"
+      when :ldap
         ldap = Amp4eLdapTool::LDAPScrape.new 
-        ldap.scrape_ldap_entries.each { |entry| puts entry.dn } unless options[:distinguished].nil? 
+        ldap.scrape_ldap_entries.each {|entry| puts entry.dn} unless options[:distinguished].nil? 
       else
         puts "I couldn't understand SOURCE, for now specify amp or ldap"
       end
