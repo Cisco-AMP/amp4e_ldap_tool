@@ -72,7 +72,7 @@ module Amp4eLdapTool
 
     private
     def make_changes(amp, amp_data, entities, ldap)
-      groups = ldap.get_groups()
+      #TODO wait for ratelimit changes
     end
 
     def format(groups, computers)
