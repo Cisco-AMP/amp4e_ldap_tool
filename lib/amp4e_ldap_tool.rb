@@ -5,7 +5,7 @@ require "amp4e_ldap_tool/ldap_scrape"
 
 module Amp4eLdapTool
   def self.compare(amp, ldap = nil)
-    puts amp.string
+    puts amp[:computers]
       
   end
 
