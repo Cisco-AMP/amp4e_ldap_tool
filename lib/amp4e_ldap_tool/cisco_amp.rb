@@ -21,7 +21,7 @@ module Amp4eLdapTool
       @third_party = config[:amp][:api][:third_party]
       @api_key = config[:amp][:api][:key]
     end
-    
+
     def get(endpoint)
       url = URI(@base_url + "/#{@version}/#{endpoint}")
       get = Net::HTTP::Get.new(url)
@@ -53,8 +53,9 @@ module Amp4eLdapTool
       send(post, url, body)
     end
 
-    private
 
+    private
+    
     def send(http_request, url, body = {})
       http_request.basic_auth(@third_party, @api_key)
       http_request.set_form_data(body) unless body.empty?

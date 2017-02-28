@@ -44,8 +44,31 @@ module Amp4eLdapTool
       puts amp.create_group(name) unless options[:desc]
       puts amp.create_group(name, options[:desc]) if options[:desc]
     end
-    
+
+    desc "view_changes", "Shows a dry run of changes"
+    def view_changes
+      amp = Amp4eLdapTool::CiscoAMP.new
+      amp_groups = amp.get(:groups)
+      hierarchy = amp_groups.group_by { |g| g.parent }
+      print_hierarchy(hierarchy)
+
+      #Get group names, and computer names so we can compare
+      ldap = Amp4eLdapTool::LDAPScrape.new
+      ldiff = ldap.scrape_ldap_entries
+
+      Amp4eLdapTool.tree(amp, ldiff)
+    end
+
     private
+    def print_hierarchy(hier)
+      hier.keys.each do |parent|
+        puts "root" if (parent.empty?)
+        puts parent["name"] unless (parent == {})
+        hier[parent].each do |child|
+          puts "\t#{child.name}"
+        end
+      end
+    end
 
     def display_resources(amp, options)
       options.keys.each do |endpoints|
