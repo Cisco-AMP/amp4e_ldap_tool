@@ -1,6 +1,7 @@
 require 'thor'
 require 'amp4e_ldap_tool/cisco_amp'
 require 'amp4e_ldap_tool/ldap_scrape'
+require 'amp4e_ldap_tool'
 
 module Amp4eLdapTool
   class CLI < Thor
@@ -47,17 +48,18 @@ module Amp4eLdapTool
 
     desc "view_changes", "Shows a dry run of changes"
     def view_changes
+      format = StringIO.new
       amp = Amp4eLdapTool::CiscoAMP.new
       amp_groups = amp.get(:groups)
       amp_groups.each do |x|
-        printf("Group: %-20s Parent: %-20s\n", x.name, x.parent[:name])
+        printf(format, "Group: %-20s Parent: %-20s\n", x.name, x.parent[:name])
       end
-
+      
       #Get group names, and computer names so we can compare
       #ldap = Amp4eLdapTool::LDAPScrape.new
       #ldiff = ldap.scrape_ldap_entries
 
-      #Amp4eLdapTool.tree(amp, ldiff)
+      Amp4eLdapTool.compare(format)
     end
 
     private
