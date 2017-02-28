@@ -48,22 +48,36 @@ module Amp4eLdapTool
 
     desc "view_changes", "Shows a dry run of changes"
     def view_changes
-      format = StringIO.new
       amp = Amp4eLdapTool::CiscoAMP.new
-      amp_groups = amp.get(:groups)
-      amp_groups.each do |x|
-        printf(format, "Group: %-20s Parent: %-20s\n", x.name, x.parent[:name])
-      end
+      amp_data = {}
+      amp_data[:computers] = amp.get(:computers)
+      amp_data[:groups] = amp.get(:groups)
+      changelog = format(amp_data[:groups], amp_data[:computers])
       
       #Get group names, and computer names so we can compare
-      #ldap = Amp4eLdapTool::LDAPScrape.new
-      #ldiff = ldap.scrape_ldap_entries
+      ldap = Amp4eLdapTool::LDAPScrape.new
+      entities = ldap.scrape_ldap_entries
 
-      Amp4eLdapTool.compare(format)
+      Amp4eLdapTool.compare(changelog)
+      answer = ask("Do you want to continue?", permit_only: ["y","n"])
+      if answer == "y"
+        make_changes(amp, amp_data, entities)
+      end
     end
 
     private
+    def make_changes(amp, amp_data, entities)
+      #TODO wait for ratelimit changes
+    end
 
+    def format(groups, computers)
+      string = StringIO.new
+      groups.each do |x|
+        printf(string, "Group: %-20s Parent: %-20s\n", x.name, x.parent[:name])
+      end
+      string
+    end
+    
     def display_resources(amp, options)
       options.keys.each do |endpoints|
         puts "#{endpoints}:"
