@@ -75,10 +75,15 @@ describe Amp4eLdapTool::CLI do
       end
       
       context 'with groups' do
-        xit 'gets a list of group names with -g' do
+        
+        it 'does not create duplicate group names' do
+
+        end
+
+        it 'gets a list of group names with -g' do
           subject.options = {groups: true}
-          allow(ldap).to receive(:get_groups).with(name1)
-            .and_return(groups)
+          allow(ldap).to receive(:get_groups).with(dn[0]).and_return(groups)
+          allow(ldap).to receive(:get_groups).with(dn[1]).and_return([])
           expect(output).to eq(groups.inject {|x,y| "#{x}\n#{y}"} + "\n" )
         end
       end
