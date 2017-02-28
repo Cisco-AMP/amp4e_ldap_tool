@@ -6,8 +6,8 @@ require 'json'
 
 module Amp4eLdapTool
   GUID = /\A\h{8}-\h{4}-\h{4}-\h{4}-\h{12}\z/
-  RATE_HEADER = 'x-ratelimit-remaining'
-  THROTTLE_THRESHOLD = 900 # * 4 seconds = 60 minutes of throttle
+  X_RATELIMIT_REMAINING = 'x-ratelimit-remaining'
+  X_RATELIMIT_RESET = 'x-ratelimit-reset'
 
   class CiscoAMP
     
@@ -59,31 +59,38 @@ module Amp4eLdapTool
     def send(http_request, url, body = {})
       http_request.basic_auth(@third_party, @api_key)
       http_request.set_form_data(body) unless body.empty?
-      response = Net::HTTP.start(url.hostname, url.port) do |http|
-        http.request(http_request)
+      check_response do
+        Net::HTTP.start(url.hostname, url.port) do |http|
+          http.request(http_request)
+        end
       end
-      check_response(response)
     end
 
-    def check_response(response)
-      throttle_check(response)
-      
-      output = ""
-      parse = JSON.parse(response.body) 
-      
-      case response.code
-      when "200"
-        output = response.body
-      when "201", "202"
-        output = response.code
-      when "400"
-        raise AMPBadRequestError.new(msg: parse["errors"])
-      when "401"
-        raise AMPUnauthorizedError.new(msg: parse["errors"])
-      else
-        raise AMPResponseError.new(msg: "code: " + response.code + " body: " + response.body)
+    def check_response
+      begin
+        response = yield
+        response_head = JSON.parse(response.header)
+        response_body = JSON.parse(response.body) 
+        
+        case response.msg.downcase.tr(" ","_").to_sym
+        when :ok
+          response_notification = response.body
+        when :accepted, :created
+          response_notification = response.msg
+        when :too_many_requests
+          raise AMPTooManyRequestsError
+        when :bad_request
+          raise AMPBadRequestError.new(msg: response_body["errors"])
+        when :unauthorized
+          raise AMPUnauthorizedError.new(msg: response_body["errors"])
+        else
+          raise AMPResponseError.new(msg: "code: " + response.msg + " body: " + response.body)
+        end
+      rescue AMPTooManyRequestsError
+        sleep(response_head[Amp4eLdapTool::X_RATELIMIT_RESET].to_i)
+        retry
       end
-      output
+      response_notification
     end
 
     def parse_response(message, endpoint)
@@ -102,15 +109,6 @@ module Amp4eLdapTool
         end
       end
       endpoints
-    end
-
-    def throttle_check(response)
-      parsed_response = JSON.parse(response.header)
-      rate = parsed_response[Amp4eLdapTool::RATE_HEADER].to_i
-      if (rate <= Amp4eLdapTool::THROTTLE_THRESHOLD)
-        puts "The ratelimit threshold has been passed, throttling.."
-        sleep(4)
-      end
     end
 
     def validate_guid(guids)
