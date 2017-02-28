@@ -71,7 +71,7 @@ module Amp4eLdapTool
     end
 
     private
-    def make_changes(amp, amp_data, entities, ldap)
+    def make_changes(amp_data, ldap_data)
       #TODO wait for ratelimit changes
     end
 
