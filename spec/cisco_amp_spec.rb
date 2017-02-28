@@ -23,8 +23,9 @@ describe Amp4eLdapTool::CiscoAMP do
   let(:third)         { "123456789" }
   let(:config)        { {amp: {host: host, email: email,
                          api: {third_party: third, key: key, version: version}}}}
-  let(:head)          { {Amp4eLdapTool::X_RATELIMIT_REMAINING => 3000,
-                         Amp4eLdapTool::X_RATELIMIT_RESET => 15}.to_json }
+  let(:head)          { double("HTTPOK", to_hash: head_hash) }
+  let(:head_hash)     { {Amp4eLdapTool::X_RATELIMIT_REMAINING => 3000,
+                         Amp4eLdapTool::X_RATELIMIT_RESET => 15}}
 
   before(:each) do
     allow(YAML).to receive(:load_file).and_return(config)
@@ -56,7 +57,8 @@ describe Amp4eLdapTool::CiscoAMP do
       let(:group_guid)  { "88888888-4444-4444-2222-121212121212" }
       let(:parent_guid) { "99999999-3333-2222-1111-121212121212" }
       let(:uri)         { URI("#{host}/#{version}/groups/#{group_guid}/parent") }
-      let(:response)    { double("resp", header: head, body: body, msg: accepted) }
+      let(:response)    { double("response", header: head, body: body, 
+                                             msg: accepted, to_hash: head_hash) }
       
       before(:each) do
         allow(Net::HTTP).to receive(:start).and_return(response)
@@ -74,7 +76,8 @@ describe Amp4eLdapTool::CiscoAMP do
 
   context '#create_group' do
     let(:uri)       { URI("#{host}/#{version}/groups/") }
-    let(:response)  { double("resp", header: head, body: body, msg: created) }
+    let(:response)  { double("response", header: head, body: body, 
+                                         msg: created, to_hash: head_hash) }
     
     before(:each) do
       expect(Net::HTTP::Post).to receive(:new)
@@ -105,7 +108,8 @@ describe Amp4eLdapTool::CiscoAMP do
     context 'with a valid request' do
       let(:new_group) { "88888888-4444-4444-2222-121212121212" }
       let(:body)      { {data: {hostname: computer}}.to_json }
-      let(:response)  { double("resp", header: head, body: body, msg: accepted) }
+      let(:response)  { double("response", header: head, body: body, 
+                                           msg: accepted, to_hash: head_hash) }
 
       it 'moves a pc from one group to another' do
         allow(Net::HTTP).to receive(:start).and_return(response)
@@ -115,7 +119,8 @@ describe Amp4eLdapTool::CiscoAMP do
     context 'with valid inputs but bad server response' do
       let(:body) { {errors: "error!"}.to_json }
       let(:invalid_group) { "88888888-4444-4444-2222-121212121212" }
-      let(:response) { double("bad_response", header: head, body: body, msg: bad_request) }
+      let(:response) { double("bad_response", header: head, body: body, 
+                                              msg: bad_request, to_hash: head_hash) }
 
       it 'raises a Bad Request error' do
         allow(Net::HTTP).to receive(:start).and_return(response)
@@ -155,7 +160,8 @@ describe Amp4eLdapTool::CiscoAMP do
                                              groups: group_endpoint },
                                      policy: {name: policy_name, 
                                               guid: policy_guid}}]}.to_json }
-        let(:response)    { double("response", header: head, body: body, msg: ok) }
+        let(:response)    { double("response", header: head, body: body, 
+                                               msg: ok, to_hash: head_hash) }
         
         it 'sends an api request for a list of computers' do
           allow(Net::HTTP).to receive(:start).and_return(response)
@@ -170,13 +176,16 @@ describe Amp4eLdapTool::CiscoAMP do
         context 'with an exceeded ratelimit' do 
           let(:sleep_rate)  { "4" }
           let(:limit)       { "0" }
-          let(:head)        {{Amp4eLdapTool::X_RATELIMIT_REMAINING => limit,
-                              Amp4eLdapTool::X_RATELIMIT_RESET => sleep_rate}.to_json}
-          let(:head_ok)     {{Amp4eLdapTool::X_RATELIMIT_REMAINING => sleep_rate,
-                              Amp4eLdapTool::X_RATELIMIT_RESET => sleep_rate}.to_json}
+          let(:head)        { double("HTTPTooManyRequests", to_hash: head_hash)}
+          let(:head_hash)   {{Amp4eLdapTool::X_RATELIMIT_REMAINING => sleep_rate,
+                              Amp4eLdapTool::X_RATELIMIT_RESET => sleep_rate}}
           let(:response)    {double("response", header: head, body: body,
-                                    msg: too_many_requests)}
-          let(:response_ok) {double("response", header: head, body:body, msg: ok)}
+                                    msg: too_many_requests, to_hash: head_hash)}
+          let(:head_ok)     { double("HTTPOK", to_hash: head_hash_ok)}
+          let(:head_hash_ok){{Amp4eLdapTool::X_RATELIMIT_REMAINING => limit,
+                              Amp4eLdapTool::X_RATELIMIT_RESET => sleep_rate}}
+          let(:response_ok) {double("response", header: head, body:body, 
+                                                msg: ok, to_hash: head_hash_ok)}
 
           it 'does not send the request' do
             allow(Net::HTTP).to receive(:start).and_return(response, response_ok)
@@ -194,7 +203,8 @@ describe Amp4eLdapTool::CiscoAMP do
                                   guid: policy_guid, product: product,
                                   default: default, serial_number: serial_num,
                                   links: {policy: policy_endpoint}}]}.to_json }
-        let(:response)    { double("response", header: head, body: body, msg: ok) }
+        let(:response)    { double("response", header: head, body: body, 
+                                               msg: ok, to_hash: head_hash) }
 
         it 'sends an api request for a list of policies' do
           allow(Net::HTTP).to receive(:start).and_return(response)
@@ -212,7 +222,8 @@ describe Amp4eLdapTool::CiscoAMP do
         let(:desc)    { "a mock group" }
         let(:body)    { {data: [{name: name, links: {group: group_endpoint}, 
                                  description: desc, group_guid: group_guid}]}.to_json }
-        let(:response){ double("response", header: head, body: body, msg: ok) }
+        let(:response){ double("response", header: head, body: body, msg: ok,
+                                           to_hash: head_hash) }
 
         it 'sends an api request for a list of groups' do
           allow(Net::HTTP).to receive(:start).and_return(response)
@@ -226,7 +237,8 @@ describe Amp4eLdapTool::CiscoAMP do
     context 'with bad creds' do
       let(:body)     {{errors: [{ error_code: 401, description: "Unauthorized",
                        details: ["Unknown API key or Client ID"]}]}.to_json}
-      let(:response) { double("response", header: head, body: body, msg: unauthorized) }
+      let(:response) { double("response", header: head, body: body, 
+                                          msg: unauthorized, to_hash: head_hash) }
 
       it 'should return invalid creds response' do
         allow(Net::HTTP).to receive(:start).and_return(response)
