@@ -59,7 +59,7 @@ module Amp4eLdapTool
       entities = ldap.scrape_ldap_entries
 
       Amp4eLdapTool.compare(changelog)
-      answer = ask("Do you want to continue?", permit_only: ["y","n"])
+      answer = ask("Do you want to continue?", limited_to: ["y","n"])
       if answer == "y"
         make_changes(amp, amp_data, entities)
       end
