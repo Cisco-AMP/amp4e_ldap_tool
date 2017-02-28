@@ -73,19 +73,12 @@ describe Amp4eLdapTool::CLI do
         expect(ldap).to receive(:get_computer).with(dn[1]).and_return(name[1])
         expect(output).to eq(name.inject {|x,y| "#{x}\n#{y}"+ "\n"})
       end
-      
-      context 'with groups' do
-        
-        it 'does not create duplicate group names' do
 
-        end
-
-        it 'gets a list of group names with -g' do
-          subject.options = {groups: true}
-          allow(ldap).to receive(:get_groups).with(dn[0]).and_return(groups)
-          allow(ldap).to receive(:get_groups).with(dn[1]).and_return([])
-          expect(output).to eq(groups.inject {|x,y| "#{x}\n#{y}"} + "\n" )
-        end
+      it 'gets a list of group names with -g' do
+        subject.options = {groups: true}
+        allow(ldap).to receive(:get_groups).with(dn[0]).and_return(groups)
+        allow(ldap).to receive(:get_groups).with(dn[1]).and_return([])
+        expect(output).to eq(groups.inject {|x,y| "#{x}\n#{y}"} + "\n" )
       end
     end
   end
