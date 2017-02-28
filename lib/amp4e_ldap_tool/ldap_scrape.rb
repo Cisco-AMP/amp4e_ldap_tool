@@ -33,7 +33,11 @@ module Amp4eLdapTool
     end
 
     def get_computer(distinguished_name)
-      distinguished_name.split(',').first.split('=').last
+      names = []
+      distinguished_name.split(",").each do |local|
+        names << local.split("=").last
+      end 
+      names.inject {|glob, name| "#{glob}.#{name}"}
     end
 
     def get_groups(distinguished_name)

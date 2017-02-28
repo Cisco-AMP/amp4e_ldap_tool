@@ -26,7 +26,11 @@ module Amp4eLdapTool
         display_resources(Amp4eLdapTool::CiscoAMP.new, options)
       when :ldap
         ldap = Amp4eLdapTool::LDAPScrape.new 
-        ldap.scrape_ldap_entries.each {|entry| puts entry.dn} unless options[:distinguished].nil? 
+        ldap.scrape_ldap_entries.each do |entry| 
+          puts entry.dn unless options[:distinguished].nil?
+          puts ldap.get_groups(entry.dn) unless options[:groups].nil?
+          puts ldap.get_computer(entry.dn) unless options[:computers].nil?
+        end
       else
         puts "I couldn't understand SOURCE, for now specify amp or ldap"
       end
@@ -77,7 +81,7 @@ module Amp4eLdapTool
       end
       string
     end
-    
+
     def display_resources(amp, options)
       options.keys.each do |endpoints|
         puts "#{endpoints}:"
