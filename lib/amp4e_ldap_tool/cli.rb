@@ -46,8 +46,8 @@ module Amp4eLdapTool
       puts amp.create_group(name, options[:desc]) if options[:desc]
     end
 
-    desc "view_changes", "Shows a dry run of changes"
-    def view_changes
+    desc "apply_changes", "Shows a dry run of changes"
+    def apply_changes
       amp = Amp4eLdapTool::CiscoAMP.new
       amp_data = {}
       amp_data[:computers] = amp.get(:computers)
