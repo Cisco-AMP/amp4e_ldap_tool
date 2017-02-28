@@ -6,8 +6,8 @@ require 'json'
 
 module Amp4eLdapTool
   GUID = /\A\h{8}-\h{4}-\h{4}-\h{4}-\h{12}\z/
-  RATE_LIMIT = 3000
   RATE_HEADER = 'x-ratelimit-remaining'
+  THROTTLE_THRESHOLD = 900 # * 4 seconds = 60 minutes of throttle
 
   class CiscoAMP
     
@@ -16,7 +16,6 @@ module Amp4eLdapTool
     def initialize(config_file = "config.yml")
       config = YAML.load_file(config_file)
       confirm_config(config)
-      @rate = Amp4eLdapTool::RATE_LIMIT
       @base_url = config[:amp][:host]
       @version = config[:amp][:api][:version]
       @email = config[:amp][:email]
@@ -28,7 +27,7 @@ module Amp4eLdapTool
       url = URI(@base_url + "/#{@version}/#{endpoint}")
       get = Net::HTTP::Get.new(url)
       response = send(get, url)
-      (response == -1) ? -1 : parse_response(response, endpoint.to_sym)
+      parse_response(response, endpoint.to_sym)
     end
 
     def update_computer(computer_guid, new_guid)
@@ -60,30 +59,26 @@ module Amp4eLdapTool
     def send(http_request, url, body = {})
       http_request.basic_auth(@third_party, @api_key)
       http_request.set_form_data(body) unless body.empty?
-      if (@rate < 1)
-        puts "The ratelimit has been hit, wait one hour and try again" 
-        return -1
-      elsif
-        response = Net::HTTP.start(url.hostname, url.port) do |http|
-          http.request(http_request)
-        end
-        update_rates(response)
-        check_response(response)
+      response = Net::HTTP.start(url.hostname, url.port) do |http|
+        http.request(http_request)
       end
+      check_response(response)
     end
 
     def check_response(response)
+      throttle_check(response)
+      
       output = ""
+      parse = JSON.parse(response.body) 
+      
       case response.code
       when "200"
         output = response.body
       when "201", "202"
         output = response.code
       when "400"
-        parse = JSON.parse(response.body)
         raise AMPBadRequestError.new(msg: parse["errors"])
       when "401"
-        parse = JSON.parse(response.body)
         raise AMPUnauthorizedError.new(msg: parse["errors"])
       else
         raise AMPResponseError.new(msg: "code: " + response.code + " body: " + response.body)
@@ -109,9 +104,13 @@ module Amp4eLdapTool
       endpoints
     end
 
-    def update_rates(response)
-      parse = JSON.parse(response.header)
-      @rate = parse[Amp4eLdapTool::RATE_HEADER].to_i
+    def throttle_check(response)
+      parsed_response = JSON.parse(response.header)
+      rate = parsed_response[Amp4eLdapTool::RATE_HEADER].to_i
+      if (rate <= Amp4eLdapTool::THROTTLE_THRESHOLD)
+        puts "The ratelimit threshold has been passed, throttling.."
+        sleep(4)
+      end
     end
 
     def validate_guid(guids)

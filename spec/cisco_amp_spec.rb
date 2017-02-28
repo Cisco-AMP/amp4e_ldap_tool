@@ -5,9 +5,9 @@ require 'yaml'
 require 'json'
 
 describe Amp4eLdapTool::CiscoAMP do
-  let(:computers)   { "computers" }
-  let(:groups)      { "groups" }
-  let(:policies)    { "policies" }
+  let(:computers)     { "computers" }
+  let(:groups)        { "groups" }
+  let(:policies)      { "policies" }
   let(:internal_server_error){ "500" }
   let(:ok)            { "200" }
   let(:accepted)      { "201" }
@@ -22,7 +22,7 @@ describe Amp4eLdapTool::CiscoAMP do
   let(:third)         { "123456789" }
   let(:config)        { {amp: {host: host, email: email,
                          api: {third_party: third, key: key, version: version}}}}
-  let(:head)          { {Amp4eLdapTool::RATE_HEADER => "3000"}.to_json }
+  let(:head)          { {Amp4eLdapTool::RATE_HEADER => 3000}.to_json }
 
   before(:each) do
     allow(YAML).to receive(:load_file).and_return(config)
@@ -156,11 +156,12 @@ describe Amp4eLdapTool::CiscoAMP do
         let(:response)    { double("response", header: head, body: body, code: ok) }
         
         context 'with an exceeded ratelimit' do 
-          let(:head)      { {Amp4eLdapTool::RATE_HEADER => "0"}.to_json }
+          let(:head)  {{Amp4eLdapTool::RATE_HEADER => 
+                        Amp4eLdapTool::THROTTLE_THRESHOLD}.to_json}
           it 'does not send the request' do
             allow(Net::HTTP).to receive(:start).and_return(response)
+            expect(amp).to receive(:sleep).with(4)
             expect(amp.get(computers).first.name).to eq(name)
-            expect(amp.get(computers)).to eq(-1)
           end
         end
         it 'sends an api request for a list of computers' do
