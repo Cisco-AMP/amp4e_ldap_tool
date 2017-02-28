@@ -18,7 +18,7 @@ module Amp4eLdapTool
     method_option :groups, aliases: "-g"
     method_option :policies, aliases: "-p"
     method_option :computers, aliases: "-c"
-    method_option :distingusihed, aliases: "-d"
+    method_option :distinguished, aliases: "-d"
     def fetch(source)
       case source.downcase.to_sym
       when :amp
