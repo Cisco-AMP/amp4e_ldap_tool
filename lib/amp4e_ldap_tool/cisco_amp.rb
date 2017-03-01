@@ -88,7 +88,9 @@ module Amp4eLdapTool
           raise AMPResponseError.new(msg: "code: " + response.msg + " body: " + response.body)
         end
       rescue AMPTooManyRequestsError
-        sleep(response_head[Amp4eLdapTool::X_RATELIMIT_RESET].to_i)
+        sleep_seconds = response_head[Amp4eLdapTool::X_RATELIMIT_RESET].to_i
+        puts "Ratelimit Reached, sleeping for #{sleep_seconds} second(s)"
+        sleep(sleep_seconds)
         retry
       end
       response_notification
