@@ -26,8 +26,6 @@ module Amp4eLdapTool
       when :ldap
         ldap = Amp4eLdapTool::LDAPScrape.new 
         ldap.scrape_ldap_entries.each {|entry| puts entry.dn} unless options[:distinguished].nil? 
-        ldap.scrape_ldap_entries.each {|entry| puts entry.cn} unless options[:computers].nil? 
-        ldap.scrape_ldap_entries.each {|entry| puts ldap.get_groups(entry.dn)} unless options[:groups].nil? 
       else
         puts "I couldn't understand SOURCE, for now specify amp or ldap"
       end

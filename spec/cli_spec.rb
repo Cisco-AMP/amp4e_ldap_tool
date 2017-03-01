@@ -60,14 +60,6 @@ describe Amp4eLdapTool::CLI do
         subject.options = {distinguished: true}
         expect(output).to eq("#{computers.first.dn}\n")
       end
-
-      xit 'gets a list of computer names with -c' do
-
-      end
-
-      xit 'gets a list of group names with -g' do
-
-      end
     end
   end
 end
