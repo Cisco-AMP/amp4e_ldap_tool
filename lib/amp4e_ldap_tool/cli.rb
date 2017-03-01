@@ -1,6 +1,7 @@
 require 'thor'
 require 'amp4e_ldap_tool/cisco_amp'
 require 'amp4e_ldap_tool/ldap_scrape'
+require 'amp4e_ldap_tool'
 
 module Amp4eLdapTool
   class CLI < Thor
@@ -44,9 +45,39 @@ module Amp4eLdapTool
       puts amp.create_group(name) unless options[:desc]
       puts amp.create_group(name, options[:desc]) if options[:desc]
     end
-    
-    private
 
+    desc "apply_changes", "Shows a dry run of changes"
+    def apply_changes
+      amp = Amp4eLdapTool::CiscoAMP.new
+      amp_data = {}
+      amp_data[:computers] = amp.get(:computers)
+      amp_data[:groups] = amp.get(:groups)
+      changelog = format(amp_data[:groups], amp_data[:computers])
+      
+      #Get group names, and computer names so we can compare
+      ldap = Amp4eLdapTool::LDAPScrape.new
+      entities = ldap.scrape_ldap_entries
+
+      Amp4eLdapTool.compare(changelog)
+      answer = ask("Do you want to continue?", limited_to: ["y","n"])
+      if answer == "y"
+        make_changes(amp, amp_data, entities)
+      end
+    end
+
+    private
+    def make_changes(amp, amp_data, entities)
+      #TODO wait for ratelimit changes
+    end
+
+    def format(groups, computers)
+      string = StringIO.new
+      groups.each do |x|
+        printf(string, "Group: %-20s Parent: %-20s\n", x.name, x.parent[:name])
+      end
+      string
+    end
+    
     def display_resources(amp, options)
       options.keys.each do |endpoints|
         puts "#{endpoints}:"
