@@ -55,18 +55,10 @@ describe Amp4eLdapTool::CLI do
         allow(Amp4eLdapTool::LDAPScrape).to receive(:new).and_return(ldap)
       end
 
-      it 'gets a list of computer names with -c' do
+      it 'gets a list of distinguished names with -d' do
         allow(ldap).to receive(:scrape_ldap_entries).and_return(computers)
         subject.options = {distinguished: true}
         expect(output).to eq("#{computers.first.dn}\n")
-      end
-
-      xit 'gets a list of distinguished names with -d' do
-
-      end
-
-      xit 'gets a list of group names with -g' do
-
       end
     end
   end
