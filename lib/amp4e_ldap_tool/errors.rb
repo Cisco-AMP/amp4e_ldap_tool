@@ -10,7 +10,13 @@ module Amp4eLdapTool
       super
     end
   end
-  
+
+  class AMPTooManyRequestsError < StandardError
+    def initialize(msg: "The ratelimit has been excedded")
+      super
+    end
+  end
+
   class AMPBadURIError < StandardError
     def initialize(msg: "The amp:host in your config file contains an invalid hostname")
       super
