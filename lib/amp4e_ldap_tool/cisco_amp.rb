@@ -70,7 +70,7 @@ module Amp4eLdapTool
     def check_response
       begin
         response = yield
-        response_head = JSON.parse(response.header)
+        response_head = response.header.to_hash
         response_body = JSON.parse(response.body) 
         
         case response.msg.downcase.tr(" ","_").to_sym
