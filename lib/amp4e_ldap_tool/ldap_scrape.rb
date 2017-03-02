@@ -57,6 +57,19 @@ module Amp4eLdapTool
       output.chomp(',')
     end
 
+    def get_parent(dot_name)
+      full_computer_name = []
+      parent_string = ''
+      dot_name.split('.').each do |name|
+        full_computer_name << name
+      end
+      
+      full_computer_name.shift
+      unless full_computer_name.empty?
+        parent_string = full_computer_name.join(".")
+      end
+    end
+    
     private
 
     def make_group_names(relative_names)
