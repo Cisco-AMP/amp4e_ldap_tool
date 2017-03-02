@@ -80,5 +80,19 @@ describe Amp4eLdapTool::LDAPScrape do
         expect(ldap.make_distinguished(domain)).to eq(distinguished_domain)
       end
     end
+
+    context '#get_parent' do
+      let(:has_two_parents) { 'test.server.local' }
+      let(:has_parent)      { 'server.local' }
+      let(:parentless)          { 'local' }
+
+      it 'should return a valid parent class' do
+        expect(ldap.get_parent(has_two_parents)).to eq(has_parent)
+      end
+
+      it 'should return nil for a group with no parent class' do
+        expect(ldap.get_parent(parentless)).to eq(nil)
+      end
+    end
   end
 end
