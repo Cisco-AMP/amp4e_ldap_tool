@@ -84,14 +84,14 @@ describe Amp4eLdapTool::LDAPScrape do
     context '#get_parent' do
       let(:has_two_parents) { 'test.server.local' }
       let(:has_parent)      { 'server.local' }
-      let(:parentless)          { 'local' }
+      let(:orphan)          { 'local' }
 
       it 'should return a valid parent class' do
         expect(ldap.get_parent(has_two_parents)).to eq(has_parent)
       end
 
       it 'should return nil for a group with no parent class' do
-        expect(ldap.get_parent(parentless)).to eq(nil)
+        expect(ldap.get_parent(orphan)).to eq(nil)
       end
     end
   end
