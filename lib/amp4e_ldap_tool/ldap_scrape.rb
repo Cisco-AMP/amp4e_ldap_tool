@@ -58,15 +58,15 @@ module Amp4eLdapTool
     end
 
     def get_parent(dot_name)
-      temp_array = []
+      full_computer_name = []
       parent_string = ''
       dot_name.split('.').each do |name|
-        temp_array << name
+        full_computer_name << name
       end
       
-      temp_array.shift
-      unless temp_array.empty?
-        parent_string = temp_array.join(".")
+      full_computer_name.shift
+      unless full_computer_name.empty?
+        parent_string = full_computer_name.join(".")
       end
     end
     
