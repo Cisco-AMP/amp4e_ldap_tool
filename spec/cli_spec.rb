@@ -47,18 +47,38 @@ describe Amp4eLdapTool::CLI do
     end
 
     context 'ldap' do
-      let(:ldap)      { double("LdapScrape") }
-      let(:output)    { get_output {subject.fetch 'ldap'} }
-      let(:computers) { [Net::LDAP::Entry.new("computer")] }
+      let(:ldap)    { double("LdapScrape") }
+      let(:output)  { get_output {subject.fetch 'ldap'} }
+      let(:dn)      { ["CN=computer1,CN=Computers,DC=Host", 
+                       "CN=computer2,CN=Computers,DC=Host"] }
+      let(:name)    { ["computer1.Computers.Host",
+                       "computer2.Computers.Host"] }
+      let(:entries) { [Net::LDAP::Entry.new(dn[0]),
+                       Net::LDAP::Entry.new(dn[1])]}
+      let(:groups)  { ["Host", "Computers.Host"] }
 
       before(:each) do
         allow(Amp4eLdapTool::LDAPScrape).to receive(:new).and_return(ldap)
+        allow(ldap).to receive(:scrape_ldap_entries).and_return(entries)
       end
 
       it 'gets a list of distinguished names with -d' do
-        allow(ldap).to receive(:scrape_ldap_entries).and_return(computers)
         subject.options = {distinguished: true}
-        expect(output).to eq("#{computers.first.dn}\n")
+        expect(output).to eq(entries.inject {|x,y| "#{x.dn}\n#{y.dn}"} + "\n")
+      end
+
+      it 'gets a list of computer names with -c' do
+        subject.options = {computers: true}
+        expect(ldap).to receive(:get_computer).with(dn[0]).and_return(name[0])
+        expect(ldap).to receive(:get_computer).with(dn[1]).and_return(name[1])
+        expect(output).to eq(name.inject {|x,y| "#{x}\n#{y}"+ "\n"})
+      end
+
+      it 'gets a list of group names with -g' do
+        subject.options = {groups: true}
+        allow(ldap).to receive(:get_groups).with(dn[0]).and_return(groups)
+        allow(ldap).to receive(:get_groups).with(dn[1]).and_return([])
+        expect(output).to eq(groups.inject {|x,y| "#{x}\n#{y}"} + "\n" )
       end
     end
   end

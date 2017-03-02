@@ -11,7 +11,7 @@ describe Amp4eLdapTool::LDAPScrape do
   let(:pw)          { 'testpassword' }
   let(:filter)      { 'computer' }
   let(:attributes)  { 'cn' }
-  let(:domain)      { 'server.host' }
+  let(:domain)      { 'computers.host' }
   let(:config)      { {ldap: { host: host, email: email, domain: domain, 
                                credentials: { un: un, pw: pw },
                                schema: { filter: filter, attributes: attributes }}}}
@@ -31,7 +31,7 @@ describe Amp4eLdapTool::LDAPScrape do
 
   context 'with a valid instance' do
     let(:server)        { double('ldapserver') }
-    let(:distinguished) { 'cn=computer1,dc=server,dc=host' }
+    let(:distinguished) { 'cn=computer1,dc=computers,dc=host' }
     
     before(:each) do
       allow(Net::LDAP).to receive(:new).and_return(server)
@@ -51,22 +51,22 @@ describe Amp4eLdapTool::LDAPScrape do
     
     context '#get_groups' do
       let(:root)    { 'host' }
-      let(:sub_dn)  { 'server.host' }
+      let(:sub_dn)  { 'computers.host' }
 
       it 'returns parsed dn names' do
-        expect(ldap.get_groups(distinguished)).to eq(['host', 'server.host'])
+        expect(ldap.get_groups(distinguished)).to eq([root, sub_dn])
       end
       
       context 'multiple same named groups' do
         it 'should not return a new group to add' do
-          expect(ldap.get_groups(distinguished)).to eq(['host', 'server.host']) 
+          expect(ldap.get_groups(distinguished)).to eq([root, sub_dn]) 
           expect(ldap.get_groups(distinguished)).to eq([])
         end
       end
     end
 
     context '#get_computer' do
-      let(:computer)  { 'computer1' }
+      let(:computer)  { 'computer1.computers.host' }
       
       it 'returns a computer name' do
         expect(ldap.get_computer(distinguished)).to eq(computer)
@@ -74,7 +74,7 @@ describe Amp4eLdapTool::LDAPScrape do
     end
 
     context '#make_distinguished' do
-      let(:distinguished_domain) { 'dc=server,dc=host' }
+      let(:distinguished_domain) { 'dc=computers,dc=host' }
       
       it 'returns a distinguished name' do
         expect(ldap.make_distinguished(domain)).to eq(distinguished_domain)

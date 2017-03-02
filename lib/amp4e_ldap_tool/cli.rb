@@ -26,7 +26,11 @@ module Amp4eLdapTool
         display_resources(Amp4eLdapTool::CiscoAMP.new, options)
       when :ldap
         ldap = Amp4eLdapTool::LDAPScrape.new 
-        ldap.scrape_ldap_entries.each {|entry| puts entry.dn} unless options[:distinguished].nil? 
+        ldap.scrape_ldap_entries.each do |entry| 
+          puts entry.dn unless options[:distinguished].nil?
+          puts ldap.get_groups(entry.dn) unless options[:groups].nil?
+          puts ldap.get_computer(entry.dn) unless options[:computers].nil?
+        end
       else
         puts "I couldn't understand SOURCE, for now specify amp or ldap"
       end
@@ -48,25 +52,26 @@ module Amp4eLdapTool
 
     desc "apply_changes", "Shows a dry run of changes"
     def apply_changes
-      amp = Amp4eLdapTool::CiscoAMP.new
-      amp_data = {}
-      amp_data[:computers] = amp.get(:computers)
-      amp_data[:groups] = amp.get(:groups)
-      changelog = format(amp_data[:groups], amp_data[:computers])
+      amp       = Amp4eLdapTool::CiscoAMP.new
+      ldap      = Amp4eLdapTool::LDAPScrape.new
+      amp_data  = { computers: amp.get(:computers), groups: amp.get(:groups) }
+      ldap_data = { groups: [], computers: [] }
+      entities  = ldap.scrape_ldap_entries
       
-      #Get group names, and computer names so we can compare
-      ldap = Amp4eLdapTool::LDAPScrape.new
-      entities = ldap.scrape_ldap_entries
+      entities.each do |entity|
+        ldap_data[:computers] << ldap.get_computer(entity.dn)
+        ldap_data[:groups]    << ldap.get_groups(entity.dn)
+      end
 
-      Amp4eLdapTool.compare(changelog)
+      Amp4eLdapTool.compare(amp_data, ldap_data)
       answer = ask("Do you want to continue?", limited_to: ["y","n"])
-      if answer == "y"
+      if (answer == "y")
         make_changes(amp, amp_data, entities)
       end
     end
 
     private
-    def make_changes(amp, amp_data, entities)
+    def make_changes(amp_data, ldap_data)
       #TODO wait for ratelimit changes
     end
 
@@ -77,7 +82,7 @@ module Amp4eLdapTool
       end
       string
     end
-    
+
     def display_resources(amp, options)
       options.keys.each do |endpoints|
         puts "#{endpoints}:"
