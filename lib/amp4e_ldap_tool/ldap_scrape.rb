@@ -25,30 +25,28 @@ module Amp4eLdapTool
       end
     end
     
-    # Prints out a list of groups from root -> lower
     def groups
-      names = split_dn(dn); names.shift
       dn_paths = []
-      temp_names = names.clone
-      name_subgroups.each do
-        name = temp_names.join(".")
-        dn_paths << name
-        temp_array.pop
+      @entries.each do |entry|
+        names = split_dn(entry.dn); names.shift; names.reverse!
+        temp_names = names.clone
+        p temp_names
+        names.each do
+          name = temp_names.inject{|glob, name| "#{name}.#{glob}"}
+          dn_paths << name
+          temp_names.pop
+        end
       end
       dn_paths.uniq.reverse
     end
 
     #TODO Make it actually use the DN instead of dotted
-    def get_parent(dn)
-      full_computer_name = []
-      parent_string = ''
-      dn.split('.').each do |name|
-        full_computer_name << name
-      end
-      
-      full_computer_name.shift
-      unless full_computer_name.empty?
-        parent_string = full_computer_name.join(".")
+    def parent(dn)
+      names = split_dn(dn)
+
+      names.shift
+      unless names.empty?
+        parent_string = names.join(".")
       end
     end
     
