@@ -20,9 +20,7 @@ module Amp4eLdapTool
           username: "#{cfg[:ldap][:credentials][:un]}@#{cfg[:ldap][:domain]}",
           password: cfg[:ldap][:credentials][:pw]}
       )
-      @entries = server.search(base: base, filter: filter, attributes: attributes) do |entry|
-        entry
-      end
+      @entries = server.search(base: base, filter: filter, attributes: attributes) { |entry| entry }
     end
     
     def groups
@@ -30,7 +28,6 @@ module Amp4eLdapTool
       @entries.each do |entry|
         names = split_dn(entry.dn); names.shift; names.reverse!
         temp_names = names.clone
-        p temp_names
         names.each do
           name = temp_names.inject{|glob, name| "#{name}.#{glob}"}
           dn_paths << name
@@ -40,7 +37,6 @@ module Amp4eLdapTool
       dn_paths.uniq.reverse
     end
 
-    #TODO Make it actually use the DN instead of dotted
     def parent(dn)
       names = split_dn(dn)
 
