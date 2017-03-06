@@ -6,7 +6,6 @@
     :pw: "gt(4DMpkgZrFay9MC2Yy"
   :schema:
     :filter: "computer"
-    :attributes: "cn"
 :amp:
   #:host: "http://localhost:3000"
   :host: "http://api-qa3-int.immunet.com"

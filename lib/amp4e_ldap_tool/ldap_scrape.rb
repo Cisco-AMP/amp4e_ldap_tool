@@ -5,86 +5,65 @@ require 'json'
 module Amp4eLdapTool
   class LDAPScrape
     
-    attr_reader :attributes, :filter, :domain, :full_name
+    attr_reader :entries
     
     def initialize(filename = 'config.yml')
       cfg = YAML.load_file(filename)
 
-      @attributes = cfg[:ldap][:schema][:attributes]
-      @filter = Net::LDAP::Filter.eq('objectClass', cfg[:ldap][:schema][:filter])
-      @domain = cfg[:ldap][:host]
-      @full_name = make_distinguished(cfg[:ldap][:domain])
-      @cache = {}
-      @server = Net::LDAP.new(
+      attributes = ["cn", "dnshostname"]
+      base = make_dn(cfg[:ldap][:domain])
+      filter = Net::LDAP::Filter.eq('objectClass', cfg[:ldap][:schema][:filter])
+      server = Net::LDAP.new(
         host: cfg[:ldap][:host],
         auth: {
           method: :simple,
           username: "#{cfg[:ldap][:credentials][:un]}@#{cfg[:ldap][:domain]}",
           password: cfg[:ldap][:credentials][:pw]}
       )
-    end
-
-    def scrape_ldap_entries
-      entry_list = []
-      @server.search(base: @full_name, filter: @filter, attributes: @attributes) do |entry|
-        entry_list << entry
+      @entries = server.search(base: base, filter: filter, attributes: attributes) do |entry| 
+        entry 
       end
-      entry_list
-    end
-
-    def get_computer(distinguished_name)
-      names = []
-      distinguished_name.split(",").each do |local|
-        names << local.split("=").last
-      end 
-      names.inject {|glob, name| "#{glob}.#{name}"}
-    end
-
-    def get_groups(distinguished_name)
-      relative_names = []
-      distinguished_name.split(',').each do |name|
-        relative_names << name.split('=').last
-      end
-      relative_names.shift
-      make_group_names(relative_names).reverse
     end
     
-    def make_distinguished(domain_name)
+    def groups
+      dn_paths = []
+      @entries.each do |entry|
+        names = split_dn(entry.dn); names.shift; names.reverse!
+        temp_names = names.clone
+        names.each do
+          name = temp_names.inject{|glob, name| "#{name}.#{glob}"}
+          dn_paths << name
+          temp_names.pop
+        end
+      end
+      dn_paths.uniq.reverse
+    end
+
+    def parent(dn)
+      names = split_dn(dn)
+
+      names.shift
+      unless names.empty?
+        parent_string = names.join(".")
+      end
+    end
+    
+    private
+
+    def make_dn(domain_name)
       output = ''
       domain_name.split('.').each do |name|
         output << "dc=#{name},"
       end
       output.chomp(',')
     end
-
-    def get_parent(dot_name)
-      full_computer_name = []
-      parent_string = ''
-      dot_name.split('.').each do |name|
-        full_computer_name << name
-      end
-      
-      full_computer_name.shift
-      unless full_computer_name.empty?
-        parent_string = full_computer_name.join(".")
-      end
-    end
     
-    private
-
-    def make_group_names(relative_names)
-      dn_paths = []
-      temp_array = relative_names.reverse.clone
-      
-      relative_names.each do
-        name = temp_array.inject { |glob, value| "#{value}.#{glob}" }
-        if @cache[name].nil? 
-          dn_paths << name
-          @cache[name] = 1
-        end
-        temp_array.pop
+    def split_dn(dn)
+      names = []
+      dn.split(",").each do |attribute|
+        names << attribute.split("=").last
       end
-      dn_paths
+      names
     end
   end
 end
