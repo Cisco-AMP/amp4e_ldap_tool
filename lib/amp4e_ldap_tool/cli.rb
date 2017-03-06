@@ -26,7 +26,7 @@ module Amp4eLdapTool
         display_resources(Amp4eLdapTool::CiscoAMP.new, options)
       when :ldap
         ldap = Amp4eLdapTool::LDAPScrape.new 
-        ldap.scrape_ldap_entries.each do |entry| 
+        ldap.entries.each do |entry| 
           puts entry.dn unless options[:distinguished].nil?
           puts ldap.get_groups(entry.dn) unless options[:groups].nil?
           puts ldap.get_computer(entry.dn) unless options[:computers].nil?
