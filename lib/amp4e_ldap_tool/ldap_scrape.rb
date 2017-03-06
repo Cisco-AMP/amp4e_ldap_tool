@@ -20,7 +20,9 @@ module Amp4eLdapTool
           username: "#{cfg[:ldap][:credentials][:un]}@#{cfg[:ldap][:domain]}",
           password: cfg[:ldap][:credentials][:pw]}
       )
-      @entries = server.search(base: base, filter: filter, attributes: attributes) { |entry| entry }
+      @entries = server.search(base: base, filter: filter, attributes: attributes) do |entry| 
+        entry 
+      end
     end
     
     def groups

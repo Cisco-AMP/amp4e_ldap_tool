@@ -54,10 +54,13 @@ describe Amp4eLdapTool::CLI do
                        "computer2.Computers.Host"] }
       let(:entries) { [Net::LDAP::Entry.new(dn[0]),
                        Net::LDAP::Entry.new(dn[1])]}
+
       let(:groups)  { ["Host", "Computers.Host"] }
       let(:ldap)    { double("LdapScrape", entries: entries) }
       
       before(:each) do
+        entries[0]["dnshostname"] = name[0]
+        entries[1]["dnshostname"] = name[1]
         allow(Amp4eLdapTool::LDAPScrape).to receive(:new).and_return(ldap)
       end
 
@@ -68,8 +71,8 @@ describe Amp4eLdapTool::CLI do
 
       it 'gets a list of computer names with -c' do
         subject.options = {computers: true}
-        expect(ldap).to receive(:computer).with(dn[0]).and_return(name[0])
-        expect(ldap).to receive(:computer).with(dn[1]).and_return(name[1])
+        expect(entries[0]).to receive(:dnshostname).and_return(name[0])
+        expect(entries[1]).to receive(:dnshostname).and_return(name[1])
         expect(output).to eq(name.inject {|x,y| "#{x}\n#{y}"+ "\n"})
       end
 

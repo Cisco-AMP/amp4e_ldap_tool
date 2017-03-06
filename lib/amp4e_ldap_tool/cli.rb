@@ -28,8 +28,8 @@ module Amp4eLdapTool
         ldap = Amp4eLdapTool::LDAPScrape.new 
         ldap.entries.each do |entry| 
           puts entry.dn unless options[:distinguished].nil?
-          puts ldap.get_groups(entry.dn) unless options[:groups].nil?
-          puts ldap.get_computer(entry.dn) unless options[:computers].nil?
+          puts ldap.groups(entry.dn) unless options[:groups].nil?
+          puts entry.dnshostname unless options[:computers].nil?
         end
       else
         puts "I couldn't understand SOURCE, for now specify amp or ldap"
