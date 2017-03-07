@@ -44,8 +44,24 @@ describe Amp4eLdapTool::LDAPScrape do
       end
     end
 
-    context '#get_parent' do
-      it 'should return a valid parent dn' do
+    context '#parent' do
+      let(:group)   { "#{pc1}.#{domain}" }
+      let(:root)    { domain.split(".").pop }
+      let(:root_dn) { "CN=com" }
+
+      it 'returns nil when no parents found for dot notation' do
+        expect(ldap.parent(root)).to eq(nil)
+      end
+
+      it 'returns nil when no parents found for dn' do
+        expect(ldap.parent(root_dn)).to eq(nil)
+      end
+
+      it 'gives a parent with dotted notation' do
+        expect(ldap.parent(group)).to eq(domain)
+      end
+
+      it 'gives a parent with a dn' do
         expect(ldap.parent(entries[0].dn)).to eq(domain)
       end
     end

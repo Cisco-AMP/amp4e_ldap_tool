@@ -50,38 +50,27 @@ module Amp4eLdapTool
       puts amp.create_group(name, options[:desc]) if options[:desc]
     end
 
-    desc "apply_changes", "Shows a dry run of changes"
-    def apply_changes
-      amp       = Amp4eLdapTool::CiscoAMP.new
-      ldap      = Amp4eLdapTool::LDAPScrape.new
-      amp_data  = { computers: amp.get(:computers), groups: amp.get(:groups) }
-      ldap_data = { groups: [], computers: [] }
-      entities  = ldap.scrape_ldap_entries
-      
-      entities.each do |entity|
-        ldap_data[:computers] << ldap.get_computer(entity.dn)
-        ldap_data[:groups]    << ldap.get_groups(entity.dn)
-      end
+    desc "move_group GUID PARENT", "Moves a group under a new parent"
+    def move_group(guid, parent_guid)
+      amp = Amp4eLdapTool::CiscoAMP.new
+      puts amp.update_group(guid, parent_guid)
+    end
 
-      Amp4eLdapTool.compare(amp_data, ldap_data)
-      answer = ask("Do you want to continue?", limited_to: ["y","n"])
+    desc "make_changes", "Shows a dry run of changes, and prompts to execute"
+    method_option :apply, aliases: "-a"
+    def make_changes
+      amp   = Amp4eLdapTool::CiscoAMP.new
+      ldap  = Amp4eLdapTool::LDAPScrape.new
+      
+      Amp4eLdapTool.dry_run(amp, ldap)
+      answer = "n"
+      answer = ask("Do you want to continue?", limited_to: ["y","n"]) if options[:apply]
       if (answer == "y")
-        make_changes(amp, amp_data, entities)
+        Amp4eLdapTool.push_changes(amp, ldap)
       end
     end
 
     private
-    def make_changes(amp_data, ldap_data)
-      #TODO wait for ratelimit changes
-    end
-
-    def format(groups, computers)
-      string = StringIO.new
-      groups.each do |x|
-        printf(string, "Group: %-20s Parent: %-20s\n", x.name, x.parent[:name])
-      end
-      string
-    end
 
     def display_resources(amp, options)
       options.keys.each do |endpoints|

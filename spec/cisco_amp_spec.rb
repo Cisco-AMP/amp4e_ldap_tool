@@ -174,22 +174,27 @@ describe Amp4eLdapTool::CiscoAMP do
           expect(amp.get(computers).first.os).to eq(os)
         end
         context 'with an exceeded ratelimit' do 
-          let(:sleep_rate)  { "4" }
-          let(:limit)       { "0" }
-          let(:head)        { double("HTTPTooManyRequests", to_hash: head_hash)}
-          let(:head_hash)   {{Amp4eLdapTool::X_RATELIMIT_REMAINING => sleep_rate,
-                              Amp4eLdapTool::X_RATELIMIT_RESET => sleep_rate}}
-          let(:response)    {double("response", header: head, body: body,
-                                    msg: too_many_requests, to_hash: head_hash)}
-          let(:head_ok)     { double("HTTPOK", to_hash: head_hash_ok)}
-          let(:head_hash_ok){{Amp4eLdapTool::X_RATELIMIT_REMAINING => limit,
-                              Amp4eLdapTool::X_RATELIMIT_RESET => sleep_rate}}
-          let(:response_ok) {double("response", header: head, body:body, 
-                                                msg: ok, to_hash: head_hash_ok)}
+          let(:sleep_rate)    { 4 }
+          let(:limit)         { "0" }
+          let(:head)          { double("HTTPTooManyRequests", to_hash: head_hash)}
+          let(:head_hash)     {{Amp4eLdapTool::X_RATELIMIT_REMAINING => sleep_rate,
+                                Amp4eLdapTool::X_RATELIMIT_RESET => sleep_rate}}
+          let(:response)      {double("response", header: head, body: body,
+                                       msg: too_many_requests, to_hash: head_hash)}
+          let(:head_ok)       { double("HTTPOK", to_hash: head_hash_ok)}
+          let(:head_hash_ok)  {{Amp4eLdapTool::X_RATELIMIT_REMAINING => limit,
+                                Amp4eLdapTool::X_RATELIMIT_RESET => sleep_rate}}
+          let(:response_ok)   {double("response", header: head, body:body, 
+                                                  msg: ok, to_hash: head_hash_ok)}
+          let(:update_string) { "Ratelimit Reached, sleeping for 4 second(s)" }
+          
+          before(:each) do
+          end
 
           it 'does not send the request' do
             allow(Net::HTTP).to receive(:start).and_return(response, response_ok)
-            expect(amp).to receive(:sleep).with(4)
+            expect($stdout).to receive(:puts).with(update_string)
+            expect(amp).to receive(:sleep).with(sleep_rate)
             expect(amp.get(computers).first.name).to eq(name)
           end
         end
@@ -221,7 +226,7 @@ describe Amp4eLdapTool::CiscoAMP do
         let(:name)    { "group_name" }
         let(:desc)    { "a mock group" }
         let(:body)    { {data: [{name: name, links: {group: group_endpoint}, 
-                                 description: desc, group_guid: group_guid}]}.to_json }
+                                 description: desc, guid: group_guid}]}.to_json }
         let(:response){ double("response", header: head, body: body, msg: ok,
                                            to_hash: head_hash) }
 
