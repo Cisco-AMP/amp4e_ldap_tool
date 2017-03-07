@@ -42,7 +42,7 @@ module Amp4eLdapTool
       validate_guid([group_guid])
       url = URI(@base_url + "/#{@version}/groups/#{group_guid}/parent")
       patch = Net::HTTP::Patch.new(url)
-      body = { parent_guid: parent }
+      body = { parent_group_guid: parent }
       response = send(patch, url, body)
     end
 
