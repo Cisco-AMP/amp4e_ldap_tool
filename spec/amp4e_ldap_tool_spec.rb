@@ -32,7 +32,7 @@ describe Amp4eLdapTool do
       entries[1]["dnshostname"] = name[1]
     end
 
-    it 'generates a list of changes' do
+    xit 'generates a list of changes' do
       expect(amp).to receive(:get).with(:groups).and_return(groups)
       expect(amp).to receive(:get).with(:computers).and_return(pc)
       expect(ldap).to receive(:parent).with(ldap_groups[0]).and_return(nil)
