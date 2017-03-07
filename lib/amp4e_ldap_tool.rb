@@ -35,8 +35,6 @@ module Amp4eLdapTool
           #we're working with already created groups
           current_group = amp_groups.find(ifnone=nil) { |g| g.guid == found.group_guid }
           new_group = amp_groups.find(ifnone=nil) {|g| g.name == parent}
-          puts current_group.name
-          puts new_group.name
           unless current_group.guid == new_group.guid
             puts "MOVE PC: #{entry.dnshostname.first}, GROUP: #{parent}"
           end
