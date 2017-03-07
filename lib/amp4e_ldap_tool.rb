@@ -23,10 +23,10 @@ module Amp4eLdapTool
     end
 
     computer = amp.get(:computers)
-    ldap.entries do |entry|
+    ldap.entries.each do |entry|
       parent = ldap.parent(entry.dn)
       if groups.include?(parent)
-        puts "MOVE PC #{entry.dnshostname.first}, GROUP: #{parent}"
+        puts "MOVE PC: #{entry.dnshostname.first}, GROUP: #{parent}"
       end
     end
   end
