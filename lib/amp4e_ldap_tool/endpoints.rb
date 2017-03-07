@@ -23,7 +23,7 @@ module Amp4eLdapTool
 
       def initialize(json)
         @name         = json["name"]
-        @guid         = json["group_guid"]
+        @guid         = json["guid"]
         @description  = json["description"]
         @link         = json["links"]["group"]
         @parent       = (json["ancestry"].nil?) ? {} :

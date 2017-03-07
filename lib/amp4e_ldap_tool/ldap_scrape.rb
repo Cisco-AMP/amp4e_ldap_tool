@@ -39,9 +39,9 @@ module Amp4eLdapTool
       dn_paths.uniq.reverse
     end
 
-    def parent(dn)
-      names = split_dn(dn)
-
+    def parent(entry_name)
+      names = split_dn(entry_name)  if entry_name.include?("=")
+      names = entry_name.split(".") if not entry_name.include?("=")
       names.shift
       unless names.empty?
         parent_string = names.join(".")

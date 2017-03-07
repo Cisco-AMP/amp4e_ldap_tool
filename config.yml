@@ -7,12 +7,8 @@
   :schema:
     :filter: "computer"
 :amp:
-  #:host: "http://localhost:3000"
-  :host: "http://api-qa3-int.immunet.com"
-  :email: "chwoznia@cisco.com"
+  :host: "http://api.qa1.immunet.com"
   :api:
-    #:third_party: "338ee569217d94555fc2"
-    :third_party: "e2dba516c85d2e20c049"
-    #:key: "583cf634-5893-42d3-8005-c91a2039c2f9"
-    :key: "1c7b98be-6f86-4409-9cd1-ff100e6f914e"
+    :third_party: "e834ecb5ed978b9b287c"
+    :key: "ce6ca488-04e3-4457-b921-01aba112ab8b"
     :version: "v1"

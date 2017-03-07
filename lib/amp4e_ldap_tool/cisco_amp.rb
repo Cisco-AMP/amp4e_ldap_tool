@@ -43,7 +43,7 @@ module Amp4eLdapTool
       url = URI(@base_url + "/#{@version}/groups/#{group_guid}/parent")
       patch = Net::HTTP::Patch.new(url)
       body = { parent_guid: parent }
-      send(patch, url, body)
+      response = send(patch, url, body)
     end
 
     def create_group(group_name, desc = "Imported from LDAP")
@@ -123,7 +123,6 @@ module Amp4eLdapTool
     end
 
     def confirm_config(config)
-      raise AMPConfigError if config[:amp][:email].nil?
       raise AMPConfigError if config[:amp][:api][:third_party].nil?
       raise AMPConfigError if config[:amp][:api][:key].nil?
       raise AMPConfigError if config[:amp][:api][:version].nil?

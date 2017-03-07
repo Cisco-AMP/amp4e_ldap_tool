@@ -221,7 +221,7 @@ describe Amp4eLdapTool::CiscoAMP do
         let(:name)    { "group_name" }
         let(:desc)    { "a mock group" }
         let(:body)    { {data: [{name: name, links: {group: group_endpoint}, 
-                                 description: desc, group_guid: group_guid}]}.to_json }
+                                 description: desc, guid: group_guid}]}.to_json }
         let(:response){ double("response", header: head, body: body, msg: ok,
                                            to_hash: head_hash) }
 

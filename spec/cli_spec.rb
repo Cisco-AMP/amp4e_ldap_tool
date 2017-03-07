@@ -1,7 +1,36 @@
 require 'amp4e_ldap_tool/cli'
+require 'amp4e_ldap_tool'
 
 describe Amp4eLdapTool::CLI do
   let(:subject)   { Amp4eLdapTool::CLI.new }
+  let(:dn)      { ["CN=computer1,CN=Computers,DC=Host", 
+                   "CN=computer2,CN=Computers,DC=Host"] }
+  let(:name)    { ["computer1.Computers.Host",
+                   "computer2.Computers.Host"] }
+  let(:entries) { [Net::LDAP::Entry.new(dn[0]),
+                   Net::LDAP::Entry.new(dn[1])]}
+  let(:groups)  { ["Host", "Computers.Host"] }
+  let(:ldap)    { double("LdapScrape", entries: entries, groups: groups) }
+  
+  context '#make_changes' do
+    let(:output)  { get_output {subject.make_changes} }
+    let(:amp)     { double("CiscoAMP") }
+
+    before(:each) do
+      entries[0]["dnshostname"] = name[0]
+      entries[1]["dnshostname"] = name[1]
+      allow(Amp4eLdapTool::CiscoAMP).to receive(:new).and_return(amp)
+      allow(Amp4eLdapTool::LDAPScrape).to receive(:new).and_return(ldap)
+    end
+
+    xit 'displays a list of changes with no flags' do
+      expect(output).to eq("something")
+    end
+
+    xit 'asks to execute changes with -a' do
+
+    end
+  end
 
   context '#fetch' do
     context 'amp' do
@@ -48,15 +77,6 @@ describe Amp4eLdapTool::CLI do
 
     context 'ldap' do
       let(:output)  { get_output {subject.fetch 'ldap'} }
-      let(:dn)      { ["CN=computer1,CN=Computers,DC=Host", 
-                       "CN=computer2,CN=Computers,DC=Host"] }
-      let(:name)    { ["computer1.Computers.Host",
-                       "computer2.Computers.Host"] }
-      let(:entries) { [Net::LDAP::Entry.new(dn[0]),
-                       Net::LDAP::Entry.new(dn[1])]}
-
-      let(:groups)  { ["Host", "Computers.Host"] }
-      let(:ldap)    { double("LdapScrape", entries: entries) }
       
       before(:each) do
         entries[0]["dnshostname"] = name[0]
