@@ -8,7 +8,7 @@ module Amp4eLdapTool
     groups = []
     amp_groups = amp.get(:groups)
     ldap.groups.each do |group|
-      found = amp_groups.find {|g| g.name == group }
+      found = amp_groups.find(ifnone=nil) {|g| g.name == group }
       if found.nil?
         puts "CREATE GROUP: #{group}"
         groups << group
@@ -18,15 +18,22 @@ module Amp4eLdapTool
     ldap.groups.each do |group|
       parent = ldap.parent(group)
       unless parent.nil?
-        puts "UPDATE GROUP: #{group}, PARENT: #{parent}"
+        found = groups.find(ifnone=nil) {|g| g == parent}
+        unless found.nil?
+          puts "UPDATE GROUP: #{group}, PARENT: #{parent}"
+        end
       end
     end
 
-    computer = amp.get(:computers)
+    computers = amp.get(:computers)
     ldap.entries.each do |entry|
-      parent = ldap.parent(entry.dn)
-      if groups.include?(parent)
-        puts "MOVE PC: #{entry.dnshostname.first}, GROUP: #{parent}"
+      found = computers.find(ifnone=nil) {|c| c.name.downcase == entry.dnshostname.first.downcase}
+      unless  found.nil?
+        parent = ldap.parent(entry.dn)
+        group = amp_groups.find(ifnone=nil) {|g| g.name == parent}
+        unless found.group_guid == group.guid
+          puts "MOVE PC: #{entry.dnshostname.first}, GROUP: #{parent}"
+        end
       end
     end
   end
@@ -35,30 +42,34 @@ module Amp4eLdapTool
   def self.push_changes(amp, ldap)
     amp_groups = amp.get(:groups)
     ldap.groups.each do |group|
-      found =  amp_groups.find {|g| g.name = group }
+      found =  amp_groups.find(ifnone=nil) {|g| g.name == group }
       if found.nil?
+        puts "creating group..."
         amp.create_group(group)
       end
     end
-
+    
     amp_groups = amp.get(:groups)
     ldap.groups.each do |group|
       parent = ldap.parent(group)
       unless parent.nil?
-        amp_parent = amp_groups.find { |e| e.name == parent }
+        amp_parent = amp_groups.find(ifnone=nil) { |e| e.name == parent }
         amp_group  = amp_groups.find { |e| e.name == group }
-        amp.update_group(amp_group.guid, amp_parent.guid)
+        unless amp_parent.guid == amp_group.parent[:guid]
+          puts "updating group parents..."
+          amp.update_group(amp_group.guid, amp_parent.guid)
+        end
       end
     end
-
-    #3. Move Computers
+    
     amp_pcs = amp.get(:computers)
     ldap.entries.each do |entry|
-      amp_pc    = amp_pcs.find {|p| p.name == entry.dnshostname.first}
+      amp_pc    = amp_pcs.find {|p| p.name.downcase == entry.dnshostname.first.downcase}
       unless amp_pc.nil?
         parent    = ldap.parent(entry.dn)
-        amp_group = amp_groups.find {|g| g.name == parent}
+        amp_group = amp_groups.find(ifnone=nil) {|g| g.name == parent}
         unless amp_pc.group_guid == amp_group.guid
+          puts "adding computer..."
           amp.update_computer(amp_pc.guid, amp_group.guid)
         end
       end
