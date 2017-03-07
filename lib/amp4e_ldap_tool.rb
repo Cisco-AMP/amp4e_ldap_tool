@@ -30,8 +30,17 @@ module Amp4eLdapTool
       found = computers.find(ifnone=nil) {|c| c.name.downcase == entry.dnshostname.first.downcase}
       unless  found.nil?
         parent = ldap.parent(entry.dn)
-        group = amp_groups.find(ifnone=nil) {|g| g.name == parent}
-        unless found.group_guid == group.guid
+        group = groups.find(ifnone=nil) {|g| g == parent}
+        if group.nil?
+          #we're working with already created groups
+          current_group = amp_groups.find(ifnone=nil) { |g| g.guid == found.group_guid }
+          new_group = amp_groups.find(ifnone=nil) {|g| g.name == parent}
+          puts current_group.name
+          puts new_group.name
+          unless current_group.guid == new_group.guid
+            puts "MOVE PC: #{entry.dnshostname.first}, GROUP: #{parent}"
+          end
+        else
           puts "MOVE PC: #{entry.dnshostname.first}, GROUP: #{parent}"
         end
       end
