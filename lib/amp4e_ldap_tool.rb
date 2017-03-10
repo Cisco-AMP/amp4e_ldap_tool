@@ -8,20 +8,19 @@ module Amp4eLdapTool
     adj = amp.make_list(amp.get(:computers), amp.get(:groups))
     ldap.groups.each do |group|
       if adj[group].nil?
-        adj[group] = { object: nil, parent: ldap.parent(group) }
-      else
-        unless adj[group][:parent] == ldap.parent(group)
-          adj[group][:parent] = ldap.parent(group)
-          puts "Created Group:  #{group}"
-        end
+        puts "Create Group: #{group}"
+        adj[group] = { object: nil, parent: nil }
+      end
+      unless adj[group][:parent] == ldap.parent(group)
+        puts "Update group: #{group}, parent: #{adj[group][:parent]} -> #{ldap.parent(group)}"
+        adj[group][:parent] = ldap.parent(group) 
       end
     end
-
     ldap.entries.each do |entry|
-      unless adj[entry.dnshostname].nil?
-        if adj[entry.dnshostname][:parent] != ldap.parent(entry.dn)
-          puts "Update group: #{group}, parent: #{adj[entry.dnshostname][:parent]} -> #{ldap.parent(entry.dn)}"
-          adj[entry.dnshostname][:parent] = ldap.parent(entry.dn)
+      computername = entry.dnshostname.first.downcase
+      unless adj[computername].nil?
+        if adj[computername][:parent] != ldap.parent(entry.dn)
+          puts "Move Computer: #{computername}, new parent: #{ldap.parent(entry.dn)}"
         end
       end
     end
