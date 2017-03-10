@@ -74,6 +74,7 @@ describe Amp4eLdapTool::CiscoAMP do
     end
   end
 
+  #TODO endpoints handle endpoint creation tests, should just test the CLI
   context '#create_group' do
     let(:uri)       { URI("#{host}/#{version}/groups/") }
     let(:response)  { double("response", header: head, body: body, 
@@ -82,15 +83,6 @@ describe Amp4eLdapTool::CiscoAMP do
     before(:each) do
       expect(Net::HTTP::Post).to receive(:new)
         .with(uri).and_return(Net::HTTP::Post.new(uri))
-    end
-    context 'with a valid input' do
-      let(:group)     { "group_name"}
-      let(:body)      { {data: {name: group}}.to_json }
-      
-      it 'creates a group' do
-        allow(Net::HTTP).to receive(:start).and_return(response)
-        expect(amp.create_group(group)).to eq(created)
-      end
     end
     context 'with a created group' do
       let(:body)      { {}.to_json }
@@ -235,7 +227,6 @@ describe Amp4eLdapTool::CiscoAMP do
           expect(amp.get(groups).first.name).to eq(name)
           expect(amp.get(groups).first.description).to eq(desc)
           expect(amp.get(groups).first.guid).to eq(group_guid)
-          expect(amp.get(groups).first.link).to eq(group_endpoint)
         end
       end
     end

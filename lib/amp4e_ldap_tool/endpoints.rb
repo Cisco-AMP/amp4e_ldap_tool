@@ -25,7 +25,6 @@ module Amp4eLdapTool
         @name         = json["name"]
         @guid         = json["guid"]
         @description  = json["description"]
-        @link         = json["links"]["group"]
         @parent       = (json["ancestry"].nil?) ? {} :
                         {name: json["ancestry"].first["name"],
                          guid: json["ancestry"].first["guid"]}
