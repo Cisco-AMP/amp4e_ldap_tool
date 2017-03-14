@@ -5,41 +5,23 @@ require "amp4e_ldap_tool/ldap_scrape"
 
 module Amp4eLdapTool
   def self.dry_run(amp, ldap)
-    groups = []
-    amp_groups = amp.get(:groups)
+    adj = amp.make_list(amp.get(:computers), amp.get(:groups))
     ldap.groups.each do |group|
-      found = amp_groups.find(ifnone=nil) {|g| g.name == group }
-      if found.nil?
-        puts "CREATE GROUP: #{group}"
-        groups << group
-      end
-    end
-
-    ldap.groups.each do |group|
-      parent = ldap.parent(group)
-      unless parent.nil?
-        found = groups.find(ifnone=nil) {|g| g == parent}
-        unless found.nil?
-          puts "UPDATE GROUP: #{group}, PARENT: #{parent}"
+      if adj[group].nil?
+        adj[group] = { object: nil, parent: ldap.parent(group) }
+      else
+        unless adj[group][:parent] == ldap.parent(group)
+          adj[group][:parent] = ldap.parent(group)
+          puts "Created Group:  #{group}"
         end
       end
     end
 
-    computers = amp.get(:computers)
     ldap.entries.each do |entry|
-      found = computers.find(ifnone=nil) {|c| c.name.downcase == entry.dnshostname.first.downcase}
-      unless  found.nil?
-        parent = ldap.parent(entry.dn)
-        group = groups.find(ifnone=nil) {|g| g == parent}
-        if group.nil?
-          #we're working with already created groups
-          current_group = amp_groups.find(ifnone=nil) { |g| g.guid == found.group_guid }
-          new_group = amp_groups.find(ifnone=nil) {|g| g.name == parent}
-          unless current_group.guid == new_group.guid
-            puts "MOVE PC: #{entry.dnshostname.first}, GROUP: #{parent}"
-          end
-        else
-          puts "MOVE PC: #{entry.dnshostname.first}, GROUP: #{parent}"
+      unless adj[entry.dnshostname].nil?
+        if adj[entry.dnshostname][:parent] != ldap.parent(entry.dn)
+          puts "Update group: #{group}, parent: #{adj[entry.dnshostname][:parent]} -> #{ldap.parent(entry.dn)}"
+          adj[entry.dnshostname][:parent] = ldap.parent(entry.dn)
         end
       end
     end

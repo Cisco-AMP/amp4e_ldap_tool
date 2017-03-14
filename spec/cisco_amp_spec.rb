@@ -262,5 +262,29 @@ describe Amp4eLdapTool::CiscoAMP do
           .to raise_error(Errno::ECONNREFUSED)
       end
     end
+
+    context '#make_list' do
+      let(:group_guid1) { 'test' }
+      let(:group_name)  { 'group1' }
+      let(:parent)      { { name: nil } }
+      let(:pc_name1)    { 'pc1' }
+      let(:pc_name2)    { 'pc2' }
+      let(:computers)   { [ double('computer', name: pc_name1, group_guid: group_guid1 ),
+                          double('computer', name: pc_name2, group_guid: group_guid1 ) ]  }
+      let(:groups)      { [ double('group', name: group_name, guid: group_guid1, 
+                                   parent: parent)]}
+      let(:output)      { { group_name => { object: groups.first, parent: nil },
+                          pc_name1 => { object: computers.first, parent: group_name },
+                          pc_name2 => { object: computers.last, parent: group_name } } }
+      
+      it 'builds an adjecency list' do
+        expect(groups).to receive(:find).and_return(groups.first, groups.first)
+        expect(amp.make_list(computers, groups)).to eq(output)
+      end
+
+
+
+
+    end
   end
 end
