@@ -20,8 +20,8 @@ module Amp4eLdapTool
     ldap.entries.each do |entry|
       unless adj[entry.dnshostname].nil?
         if adj[entry.dnshostname][:parent] != ldap.parent(entry.dn)
+          puts "Update group: #{group}, parent: #{adj[entry.dnshostname][:parent]} -> #{ldap.parent(entry.dn)}"
           adj[entry.dnshostname][:parent] = ldap.parent(entry.dn)
-          puts "Update group: #{group}, parent: #{adj[entry.dnshostname][:parent]} -> #{ldap.parent(entry.dn)}
         end
       end
     end
