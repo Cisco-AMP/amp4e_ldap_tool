@@ -88,7 +88,9 @@ module Amp4eLdapTool
         case response.msg.downcase.tr(" ","_").to_sym
         when :ok
           response_notification = response.body
-        when :accepted, :created
+        when :created
+          response_notification = Amp4eLdapTool::AMP::Group.new(response_body["data"])
+        when :accepted
           response_notification = response.msg
         when :too_many_requests
           raise AMPTooManyRequestsError

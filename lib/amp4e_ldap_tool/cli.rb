@@ -46,8 +46,8 @@ module Amp4eLdapTool
     method_option :desc, aliases: "-d"
     def create(name)
       amp = Amp4eLdapTool::CiscoAMP.new
-      puts amp.create_group(name) unless options[:desc]
-      puts amp.create_group(name, options[:desc]) if options[:desc]
+      puts amp.create_group(name).name unless options[:desc]
+      puts amp.create_group(name, options[:desc]).name if options[:desc]
     end
 
     desc "move_group GUID PARENT", "Moves a group under a new parent"
