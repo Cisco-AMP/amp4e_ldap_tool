@@ -61,7 +61,7 @@ module Amp4eLdapTool
     def make_changes
       amp   = Amp4eLdapTool::CiscoAMP.new
       ldap  = Amp4eLdapTool::LDAPScrape.new
-      
+
       Amp4eLdapTool.dry_run(amp, ldap)
       answer = "n"
       answer = ask("Do you want to continue?", limited_to: ["y","n"]) if options[:apply]
