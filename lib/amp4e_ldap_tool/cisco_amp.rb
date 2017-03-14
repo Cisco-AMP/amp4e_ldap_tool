@@ -59,9 +59,8 @@ module Amp4eLdapTool
       groups.each do |group|
         adj[group.name] = { object: group, parent: group.parent[:name] }
       end
-
       computers.each do |pc|
-        group = groups.find{ |g| g.guid = pc.group_guid }
+        group = groups.find{ |g| g.guid == pc.group_guid }
         adj[pc.name.downcase] = { object: pc, parent: group.name }
       end
       adj
