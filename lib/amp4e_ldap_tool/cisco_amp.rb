@@ -54,6 +54,18 @@ module Amp4eLdapTool
       send(post, url, body)
     end
 
+    def make_list(computers, groups)
+      adj = {}
+      groups.each do |group|
+        adj[group.name] = { object: group, parent: group.parent[:name] }
+      end
+
+      computers.each do |pc|
+        group = groups.find{ |g| g.guid = pc.group_guid }
+        adj[pc.name] = { object: pc, parent: group.name }
+      end
+      adj
+    end
 
     private
     
