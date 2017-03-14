@@ -12,7 +12,7 @@ module Amp4eLdapTool
       else
         unless adj[group][:parent] == ldap.parent(group)
           adj[group][:parent] = ldap.parent(group)
-          puts "Updated group:  #{group}"
+          puts "Created Group:  #{group}"
         end
       end
     end
@@ -21,7 +21,7 @@ module Amp4eLdapTool
       unless adj[entry.dnshostname].nil?
         if adj[entry.dnshostname][:parent] != ldap.parent(entry.dn)
           adj[entry.dnshostname][:parent] = ldap.parent(entry.dn)
-          puts "Updated parent: #{parent}"
+          puts "Update group: #{group}, parent: #{adj[entry.dnshostname][:parent]} -> #{ldap.parent(entry.dn)}
         end
       end
     end
