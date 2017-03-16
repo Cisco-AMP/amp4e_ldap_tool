@@ -30,4 +30,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rspec", "~> 3.0"
   spec.add_dependency "thor", "~> 0.19.4"
   spec.add_dependency "net-ldap", "~> 0.15.0" 
+  spec.add_dependency "terminal-table", "~> 1.7", ">= 1.7.3"
 end
