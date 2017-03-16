@@ -25,12 +25,12 @@ module Amp4eLdapTool
       computername = entry.dnshostname.first.downcase
       unless adj[computername].nil?
         if adj[computername][:parent] != ldap.parent(entry.dn)
-          old = adj[computername][:parent]
-          new = ldap.parent(entry.dn)
-          if counter[old].nil?
-            counter[old] = {new => 1}
+          old_g = adj[computername][:parent]
+          new_g = ldap.parent(entry.dn)
+          if counter[old_g].nil?
+            counter[old_g] = {new_g => 1}
           else
-            counter[old][new].nil? ? counter[old][new] = 1 : counter[old][new] += 1
+            counter[old_g][new_g].nil? ? counter[old_g][new_g] = 1 : counter[old_g][new_g] += 1
           end
         end
       end
