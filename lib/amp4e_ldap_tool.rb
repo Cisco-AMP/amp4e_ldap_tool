@@ -25,19 +25,20 @@ module Amp4eLdapTool
       computername = entry.dnshostname.first.downcase
       unless adj[computername].nil?
         if adj[computername][:parent] != ldap.parent(entry.dn)
-          old_g = adj[computername][:parent]
-          new_g = ldap.parent(entry.dn)
-          if counter[old_g].nil?
-            counter[old_g] = {new_g => 1}
+          old_name = adj[computername][:parent]
+          new_name = ldap.parent(entry.dn)
+          if counter[old_name].nil?
+            counter[old_name] = {new_name => 1}
           else
-            counter[old_g][new_g].nil? ? counter[old_g][new_g] = 1 : counter[old_g][new_g] += 1
+            counter[old_name][new_name].nil? ? counter[old_name][new_name] = 1 
+                                             : counter[old_name][new_name] += 1
           end
         end
       end
     end
-    counter.keys.each do |old_g|
-      counter[old_g].keys.each do |new_g|
-        data[:pc_moves] << [counter[old_g][new_g], old_g, new_g]
+    counter.keys.each do |old_name|
+      counter[old_name].keys.each do |new_name|
+        data[:pc_moves] << [counter[old_name][new_name], old_name, new_name]
       end
     end
     generate_table(data)
