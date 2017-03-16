@@ -6,7 +6,7 @@ require 'amp4e_ldap_tool'
 module Amp4eLdapTool
   class CLI < Thor
     
-    desc "amp --[groups|computers|policies]", "Gets groups, computer, and/or policies"
+    desc "amp --[groups|computers|policies]", "Gets groups, computer, and/or policies from AMP"
     long_desc <<-LONGDESC
     groupsync amp will get a list of groups, policies, and computers from AMP,
     you must specify with --groups (-g), --computers (-c), or --policies (-p).
@@ -16,7 +16,6 @@ module Amp4eLdapTool
 
     > $ groupsync  amp -c
     LONGDESC
-    desc "amp", "Gets computers and/or groups from AMP"
     method_option :computers, aliases: "-c"
     method_option :groups, aliases: "-g"
     method_option :policies, aliases: "-p"
@@ -24,7 +23,7 @@ module Amp4eLdapTool
       display_resources(Amp4eLdapTool::CiscoAMP.new, options)
     end
 
-    desc "ldap --[groups|computers|distinguished]", "Gets groups, computer, and/or distinguished names"
+    desc "ldap --[groups|computers|distinguished]", "Gets groups, computer, and/or distinguished names from LDAP"
     long_desc <<-LONGDESC
     groupsync ldap will get a list of groups, distinguished names, and computers from AMP,
     you must specify with --groups (-g), --computers (-c), or --distinguished (-d).
@@ -34,7 +33,6 @@ module Amp4eLdapTool
 
     > $ groupsync  ldap -c
     LONGDESC
-    desc "ldap", "Gets computers and/or groups from LDAP"
     method_option :computers, aliases: "-c"
     method_option :groups, aliases: "-g"
     method_option :distinguished, aliases: "-d"
