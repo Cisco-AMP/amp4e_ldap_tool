@@ -35,9 +35,9 @@ module Amp4eLdapTool
         end
       end
     end
-    counter.keys.each do |o|
-      counter[o].keys.each do |n|
-        data[:pc_moves] << [counter[o][n], o, n]
+    counter.keys.each do |old_g|
+      counter[old_g].keys.each do |new_g|
+        data[:pc_moves] << [counter[old_g][new_g], old_g, new_g]
       end
     end
     generate_table(data)
