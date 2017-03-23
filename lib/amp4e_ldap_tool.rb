@@ -61,10 +61,11 @@ module Amp4eLdapTool
     end
     ldap.entries.each do |entry|
       computername = entry.dnshostname.first.downcase
+      parent_name = ldap.parent(entry.dn)
       unless adj[computername].nil?
-        if adj[computername][:parent] != ldap.parent(entry.dn)
-          puts "adding computer..."
-          amp.update_computer(adj[computername][:object].guid, adj[adj[computername][:parent]][:object].guid)
+        if adj[computername][:parent] != parent_name
+          puts "moving computer..."
+          amp.update_computer(adj[computername][:object].guid, adj[parent_name][:object].guid)
         end
       end
     end

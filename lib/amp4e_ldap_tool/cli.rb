@@ -2,6 +2,7 @@ require 'thor'
 require 'amp4e_ldap_tool/cisco_amp'
 require 'amp4e_ldap_tool/ldap_scrape'
 require 'amp4e_ldap_tool'
+require 'terminal-table'
 
 module Amp4eLdapTool
   class CLI < Thor
@@ -18,8 +19,9 @@ module Amp4eLdapTool
     method_option :computers, aliases: "-c"
     method_option :groups, aliases: "-g"
     method_option :policies, aliases: "-p"
+    method_option :table, aliases: "-t"
     def amp
-      display_resources(Amp4eLdapTool::CiscoAMP.new, options)
+      display_resources(Amp4eLdapTool::CiscoAMP.new, options, options[:table])
     end
 
     desc "ldap --[groups|computers|distinguished]", "Gets groups, computer, and/or distinguished names from LDAP"
@@ -34,6 +36,7 @@ module Amp4eLdapTool
     method_option :computers, aliases: "-c"
     method_option :groups, aliases: "-g"
     method_option :distinguished, aliases: "-d"
+    method_option :table, aliases: "-t"
     def ldap
       ldap = Amp4eLdapTool::LDAPScrape.new 
       puts ldap.groups unless options[:groups].nil?
@@ -84,34 +87,55 @@ module Amp4eLdapTool
       puts amp.update_group(guid, parent_guid)
     end
 
-    long_desc <<-LONGDESC
-    Shows a dry run of changes, and prompts to execute:
-
-    For example the following command will execute a dry run:
-
-    > $ groupsync make_changes -a
-    LONGDESC
+    
     desc "make_changes", "Shows a dry run of changes, and prompts to execute"
+    long_desc <<-LONGDESC
+    Shows a dry run of changes in tabular form:
+
+    Executing 'make_changes' on its own produces a dry run, while the '-a' option 
+    prompts the user to apply the changes. The '-f' option is used for
+    scripting and executes the changes without a prompt or dry-run report.
+
+    >$ amp4e_ldap_tool make_changes -a \x5
+    ... \x5
+    Do you want to continue? [y, n]\x5
+    
+    LONGDESC
     method_option :apply, aliases: "-a"
+    method_option :force, aliases: "-f"
     def make_changes
+      answer = "n"
       amp   = Amp4eLdapTool::CiscoAMP.new
       ldap  = Amp4eLdapTool::LDAPScrape.new
 
-      Amp4eLdapTool.dry_run(amp, ldap)
-      answer = "n"
-      answer = ask("Do you want to continue?", limited_to: ["y","n"]) if options[:apply]
-      if (answer == "y")
+      if (options.empty?)
+        Amp4eLdapTool.dry_run(amp, ldap)
+      elsif (options[:apply])
+        Amp4eLdapTool.dry_run(amp, ldap)
+        answer = ask("Do you want to continue?", limited_to: ["y","n"]) if options[:apply]
+        Amp4eLdapTool.push_changes(amp, ldap) if (answer == "y")
+      elsif (options[:force])
         Amp4eLdapTool.push_changes(amp, ldap)
       end
     end
 
     private
 
-    def display_resources(amp, options)
-      options.keys.each do |endpoints|
-        puts "#{endpoints}:"
-        amp.get(endpoints).each do |endpoint|
-          puts endpoint.name
+    def display_resources(amp, options, table)
+      endpoints = ["computers", "groups", "policies"]
+      if table
+        endpoints.each do |name|
+          rows = []
+          amp.get(name).each do |endpoint|
+            rows << [endpoint.name]
+          end
+          puts Terminal::Table.new(:headings => [name], :rows => rows)
+        end
+      else
+        options.keys.each do |endpoints|
+          amp.get(endpoints).each do |endpoint|
+            puts endpoint.name
+          end
         end
       end
     end
