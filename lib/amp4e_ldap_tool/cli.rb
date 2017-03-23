@@ -122,7 +122,6 @@ module Amp4eLdapTool
     private
 
     def display_resources(amp, options)
-      endpoints = ["computers", "groups", "policies"]
       if options[:table]
         options.keys.each do |name|
           rows = []
