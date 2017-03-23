@@ -21,7 +21,7 @@ module Amp4eLdapTool
     method_option :policies, aliases: "-p"
     method_option :table, aliases: "-t"
     def amp
-      display_resources(Amp4eLdapTool::CiscoAMP.new, options, options[:table])
+      display_resources(Amp4eLdapTool::CiscoAMP.new, options)
     end
 
     desc "ldap --[groups|computers|distinguished]", "Gets groups, computer, and/or distinguished names from LDAP"
@@ -121,15 +121,15 @@ module Amp4eLdapTool
 
     private
 
-    def display_resources(amp, options, table)
+    def display_resources(amp, options)
       endpoints = ["computers", "groups", "policies"]
-      if table
-        endpoints.each do |name|
+      if options[:table]
+        options.keys.each do |name|
           rows = []
-          amp.get(name).each do |endpoint|
-            rows << [endpoint.name]
+          unless name == 'table'
+            amp.get(name).each {|endpoint| rows << [endpoint.name]}
+            puts Terminal::Table.new(:headings => [name], :rows => rows)
           end
-          puts Terminal::Table.new(:headings => [name], :rows => rows)
         end
       else
         options.keys.each do |endpoints|
