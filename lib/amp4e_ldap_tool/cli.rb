@@ -39,9 +39,26 @@ module Amp4eLdapTool
     method_option :table, aliases: "-t"
     def ldap
       ldap = Amp4eLdapTool::LDAPScrape.new 
-      puts ldap.groups unless options[:groups].nil?
-      ldap.entries.each {|entry| puts entry.dnshostname} unless options[:computers].nil?
-      ldap.entries.each {|entry| puts entry.dn} unless options[:distinguished].nil?
+
+      if options[:table]
+        options.keys.each do |name|
+          rows = []
+          unless name == 'table'
+            if name == 'computers'
+              ldap.entries.each {|entry| rows << [entry.dnshostname]}
+            elsif name == 'distinguished'
+              ldap.entries.each {|entry| rows << [entry.dn]}
+            elsif name == 'groups'
+              ldap.groups.each {|entry| rows << [entry]}
+            end
+            puts Terminal::Table.new(:headings => [name], :rows => rows)
+          end
+        end
+      else
+        puts ldap.groups unless options[:groups].nil?
+        ldap.entries.each {|entry| puts entry.dnshostname} unless options[:computers].nil?
+        ldap.entries.each {|entry| puts entry.dn} unless options[:distinguished].nil?
+      end
     end
  
     long_desc <<-LONGDESC
