@@ -21,7 +21,7 @@ module Amp4eLdapTool
     method_option :policies, aliases: "-p"
     method_option :table, aliases: "-t"
     def amp
-      display_resources(Amp4eLdapTool::CiscoAMP.new, options, options[:table])
+      display_resources(Amp4eLdapTool::CiscoAMP.new, options)
     end
 
     desc "ldap --[groups|computers|distinguished]", "Gets groups, computer, and/or distinguished names from LDAP"
@@ -39,9 +39,26 @@ module Amp4eLdapTool
     method_option :table, aliases: "-t"
     def ldap
       ldap = Amp4eLdapTool::LDAPScrape.new 
-      puts ldap.groups unless options[:groups].nil?
-      ldap.entries.each {|entry| puts entry.dnshostname} unless options[:computers].nil?
-      ldap.entries.each {|entry| puts entry.dn} unless options[:distinguished].nil?
+
+      if options[:table]
+        options.keys.each do |name|
+          rows = []
+          unless name == 'table'
+            if name == 'computers'
+              ldap.entries.each {|entry| rows << [entry.dnshostname]}
+            elsif name == 'distinguished'
+              ldap.entries.each {|entry| rows << [entry.dn]}
+            elsif name == 'groups'
+              ldap.groups.each {|entry| rows << [entry]}
+            end
+            puts Terminal::Table.new(:headings => [name], :rows => rows)
+          end
+        end
+      else
+        puts ldap.groups unless options[:groups].nil?
+        ldap.entries.each {|entry| puts entry.dnshostname} unless options[:computers].nil?
+        ldap.entries.each {|entry| puts entry.dn} unless options[:distinguished].nil?
+      end
     end
  
     long_desc <<-LONGDESC
@@ -121,15 +138,14 @@ module Amp4eLdapTool
 
     private
 
-    def display_resources(amp, options, table)
-      endpoints = ["computers", "groups", "policies"]
-      if table
-        endpoints.each do |name|
+    def display_resources(amp, options)
+      if options[:table]
+        options.keys.each do |name|
           rows = []
-          amp.get(name).each do |endpoint|
-            rows << [endpoint.name]
+          unless name == 'table'
+            amp.get(name).each {|endpoint| rows << [endpoint.name]}
+            puts Terminal::Table.new(:headings => [name], :rows => rows)
           end
-          puts Terminal::Table.new(:headings => [name], :rows => rows)
         end
       else
         options.keys.each do |endpoints|
