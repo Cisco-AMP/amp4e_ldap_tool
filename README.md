@@ -77,17 +77,17 @@ The config file holds our user/password information for the API/LDAP servers. It
 ```
 #config.yml
 :ldap:
-  :host:
-  :domain:
+  :host: 	# LDAP hostname
+  :domain: 	# domain of LDAP tree
   :credentials:
-    :un:
-    :pw:
+    :un:	# server username
+    :pw:	# server password
   :schema:
-    :filter: "computer"
+    :filter: "computer"	# default as computer
 :amp:
-  :host:
+  :host:	# api url for AMP
   :api:
-    :third_party:
-    :key:
-    :version: "v1"
+    :third_party:	# third party code
+    :key:		# api key
+    :version: "v1"	# default version is v1
 ```
