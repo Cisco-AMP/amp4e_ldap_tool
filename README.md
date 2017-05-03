@@ -1,8 +1,8 @@
-#amp4e\_ldap\_tool
+# amp4e\_ldap\_tool
 Ruby command line script to reconcile computers and groups on Cisco's AMP for Endpoints web portal with local LDAP servers.
 
-##Commands
-###AMP
+## Commands
+### AMP
 `amp4e_ldap_tool amp`
 
 It makes an HTTP request to the AMP for Endpoints web portal. We must provide flags to tell amp what we want to receive:
@@ -12,7 +12,7 @@ It makes an HTTP request to the AMP for Endpoints web portal. We must provide fl
 - '-p' gets a list of policies
 - '-t' provides any of the above options with formatted output.
 
-###LDAP
+### LDAP
 
 It retrieves information from the LDAP server, using credentials provided in your config file. It also requires some flags to tell it what to get from the server:
 
@@ -22,7 +22,7 @@ It retrieves information from the LDAP server, using credentials provided in you
 - '-t' provides any of the above options with formatted output.
 
 
-###Make_changes
+### Make\_changes
 
 The command `make_changes` is the workhorse. Calling it on its own:
 
@@ -69,7 +69,7 @@ Applying the -a option will tell the command to apply the changes, it will promp
 
 
 
-##Config File
+## Config File
 
 The config file holds our user/password information for the API/LDAP servers. It follows a specific format and a template is provided below:
 
