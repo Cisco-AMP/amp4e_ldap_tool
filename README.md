@@ -7,23 +7,23 @@ Ruby command line script to reconcile computers and groups on Cisco's AMP for En
 
 It makes an HTTP request to the AMP for Endpoints web portal. We must provide flags to tell amp what we want to receive:
 
-- '-c' gets a list of Computers in the AMP system.
-- '-g' gets a list of Groups as AMP sees them
-- '-p' gets a list of policies
-- '-t' provides any of the above options with formatted output.
+- `-c` gets a list of Computers in the AMP system.
+- `-g` gets a list of Groups as AMP sees them
+- `-p` gets a list of policies
+- `-t` provides any of the above options with formatted output.
 
 ### LDAP
+`amp4e_ldap_tool`
 
-It retrieves information from the LDAP server, using credentials provided in your config file. It also requires some flags to tell it what to get from the server:
+It retrieves information from the LDAP server, using credentials provided in your config file. It also requires flags to tell it what to get from the server:
 
-- '-c' gets computer names
-- '-g' gets computer group names
-- '-d' gets the fully distinguished name (LDAP)
-- '-t' provides any of the above options with formatted output.
+- `-c` gets computer names
+- `-g` gets computer group names
+- `-d` gets the fully distinguished name (LDAP)
+- `-t` provides any of the above options with formatted output.
 
 
 ### Make\_changes
-
 The command `make_changes` is the workhorse. Calling it on its own:
 
 ```
@@ -77,15 +77,15 @@ The config file holds our user/password information for the API/LDAP servers. It
 ```
 #config.yml
 :ldap:
-  :host: 	# LDAP hostname
-  :domain: 	# domain of LDAP tree
+  :host: 		# LDAP hostname
+  :domain: 		# domain of LDAP tree
   :credentials:
-    :un:	# server username
-    :pw:	# server password
+    :un:		# server username
+    :pw:		# server password
   :schema:
     :filter: "computer"	# default as computer
 :amp:
-  :host:	# api url for AMP
+  :host:		# api url for AMP
   :api:
     :third_party:	# third party code
     :key:		# api key
