@@ -1,11 +1,11 @@
 #amp4e\_ldap\_tool
-Ruby command line script to reconcile computers and groups on Cisco's Amp for Endpoints web portal with local LDAP servers.
+Ruby command line script to reconcile computers and groups on Cisco's AMP for Endpoints web portal with local LDAP servers.
 
 ##Commands
 ###AMP
 `amp4e_ldap_tool amp`
 
-pings the Amp for Endpoints web portal. We must provide flags to tell amp what we want to receive:
+It makes an HTTP request to the AMP for Endpoints web portal. We must provide flags to tell amp what we want to receive:
 
 - '-c' gets a list of Computers in the AMP system.
 - '-g' gets a list of Groups as AMP sees them
@@ -14,7 +14,7 @@ pings the Amp for Endpoints web portal. We must provide flags to tell amp what w
 
 ###LDAP
 
-Gets information from the LDAP server, using credentials provided in your config file. It also requires some flags to tell it what to get from the server:
+It retrieves information from the LDAP server, using credentials provided in your config file. It also requires some flags to tell it what to get from the server:
 
 - '-c' gets computer names
 - '-g' gets computer group names
@@ -62,7 +62,7 @@ Displays the _dry run_, a list of changes that will be changed shown in aggregat
 +----------------+------------+------------------------+
 ``` 
 
-applying the -a option will tell the command to apply the changes, it will prompt the user to continue with a y/n after showing the _dry run_.
+Applying the -a option will tell the command to apply the changes, it will prompt the user to continue with a y/n after showing the _dry run_.
 
 
 
