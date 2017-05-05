@@ -1,6 +1,8 @@
 # amp4e\_ldap\_tool
 Ruby command line script to reconcile computers and groups on Cisco's AMP for Endpoints web portal with local LDAP servers.
 
+`gem install amp4e_ldap_tool`
+
 ## Commands
 ### AMP
 `amp4e_ldap_tool amp`
