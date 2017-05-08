@@ -23,5 +23,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency "thor", "~> 0.19.4"
   spec.add_dependency "net-ldap", "~> 0.15.0" 
   spec.add_dependency "terminal-table", "~> 1.7", ">= 1.7.3"
-  spec.homepage "https://github.com/Cisco-AMP/amp4e_ldap_tool"
+  spec.homepage = "https://github.com/Cisco-AMP/amp4e_ldap_tool"
 end
