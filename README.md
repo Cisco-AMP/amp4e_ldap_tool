@@ -1,3 +1,6 @@
+# NOTE:
+This tool is no longer supported and should not be used anymore.  Archiving for now
+
 # amp4e\_ldap\_tool
 Ruby command line script to reconcile computers and groups on Cisco's AMP for Endpoints web portal with local LDAP servers.
 
